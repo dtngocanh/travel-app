@@ -1,10 +1,9 @@
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 
-export default function TabLayout() {
+export default function OnboardingLayout() {
   return (
-    <Tabs>
-      <Tabs.Screen name="onboarding" options={{ title: 'Onboarding' }} />
-      
-    </Tabs>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="onboarding" />
+    </Stack>
   );
 }

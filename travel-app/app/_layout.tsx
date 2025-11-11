@@ -1,21 +1,35 @@
 import { Stack } from 'expo-router';
 import { createContext } from 'react';
 import { colors, fonts } from '../theme';
+import { useFonts } from 'expo-font';
+import { ActivityIndicator } from 'react-native';
 
 export const ThemeContext = createContext({ colors, fonts });
 
 export default function RootLayout() {
+
+  const [fontsLoaded] = useFonts({
+    'PlayfairDisplay-Bold': require('../assets/fonts/PlayfairDisplay-Bold.ttf'), 
+    'Raleway-Regular': require('../assets/fonts/Raleway-Regular.ttf'),
+    'Raleway-Medium': require('../assets/fonts/Raleway-Medium.ttf')
+  });
+
+  if (!fontsLoaded) {
+    return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+  }
   return (
 
-     <ThemeContext.Provider value={{ colors, fonts }}>
-        <Stack>
-               <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeContext.Provider>
-
-//     <Stack>
-//       <Stack.Screen name="(customer)" options={{ headerShown: false }} />
-//     </Stack>
-
+    <ThemeContext.Provider value={{ colors, fonts }}>
+      <Stack>
+        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(customer)" options={{ headerShown: false }} />
+        <Stack.Screen name="pages" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="pages/detail"
+          options={{ headerShown: false, animation: 'slide_from_right' }}
+        />
+      </Stack>
+    </ThemeContext.Provider>
   );
 }

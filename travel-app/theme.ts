@@ -4,9 +4,11 @@ export const colors = {
   background: '#FFFFFF',
   text: '#333333',
   grayText: '#666666',
+  inpuBackGroundColor: '#efefefff',
 };
 
 export const fonts = {
   regular: 'Raleway-Regular',
   bold: 'PlayfairDisplay-Bold',
+  medium: 'Raleway-Medium'
 };
