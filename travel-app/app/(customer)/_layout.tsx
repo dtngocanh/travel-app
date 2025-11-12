@@ -15,7 +15,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => (
+           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
@@ -25,6 +25,24 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{ title: 'Explore', tabBarIcon: ({ color, size }) => (<Ionicons name="compass" size={size} color={color} />), }}
+      />
+
+      {/* Tab Tours */}
+      <Tabs.Screen
+        name="mytrip"
+        options={{ title: 'MyTrip', tabBarIcon: ({ color, size }) => (<Ionicons name="bag-outline" size={size} color={color} />), }}
+      />
+
+      {/* Tab Tours */}
+      <Tabs.Screen
+        name="notifications"
+        options={{ title: 'Notifications', tabBarIcon: ({ color, size }) => (<Ionicons name="notifications-outline" size={size} color={color} />), }}
+      />
+
+      {/* Tab Tours */}
+      <Tabs.Screen
+        name="profile"
+        options={{ title: 'Profile', tabBarIcon: ({ color, size }) => (<Ionicons name="person-outline" size={size} color={color} />), }}
       />
     </Tabs>
   );
