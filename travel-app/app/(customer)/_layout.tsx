@@ -33,12 +33,7 @@ export default function TabLayout() {
         options={{ title: 'MyTrip', tabBarIcon: ({ color, size }) => (<Ionicons name="bag-outline" size={size} color={color} />), }}
       />
 
-      {/* Tab Tours */}
-      <Tabs.Screen
-        name="notifications"
-        options={{ title: 'Notifications', tabBarIcon: ({ color, size }) => (<Ionicons name="notifications-outline" size={size} color={color} />), }}
-      />
-
+      
       {/* Tab Tours */}
       <Tabs.Screen
         name="profile"
