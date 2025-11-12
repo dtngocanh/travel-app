@@ -21,8 +21,8 @@ export default function RootLayout() {
 
     <ThemeContext.Provider value={{ colors, fonts }}>
       <Stack>
-        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        {/* <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} /> */}
         <Stack.Screen name="(customer)" options={{ headerShown: false }} />
         <Stack.Screen name="pages" options={{ headerShown: false }} />
         <Stack.Screen
