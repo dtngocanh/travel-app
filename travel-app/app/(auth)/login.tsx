@@ -27,6 +27,9 @@ const SignInScreen: React.FC = () => {
   const handleSignUp = () => {
     router.push('/(auth)/signup')
   };
+  const handleLogInSuccess = () => {
+    router.replace('../(customer)/index'); // thay thế stack
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -147,7 +150,7 @@ const SignInScreen: React.FC = () => {
 
         {/* ===== Nút Sign In ===== */}
         <TouchableOpacity
-          onPress={handleSignIn}
+          onPress={handleLogInSuccess}
           style={{
             backgroundColor: colors.primary,
             borderRadius: 16,
@@ -168,7 +171,7 @@ const SignInScreen: React.FC = () => {
               fontSize: 18,
             }}
           >
-            Sign In
+            Log In
           </Text>
         </TouchableOpacity>
 
