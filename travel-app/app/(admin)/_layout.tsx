@@ -12,7 +12,7 @@ export default function TabLayout() {
     >
       {/* Tab Home */}
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: 'Home',
            tabBarIcon: ({ color, size }) => (
@@ -20,24 +20,11 @@ export default function TabLayout() {
           ),
         }}
       />
-
-      {/* Tab Tours */}
-      <Tabs.Screen
-        name="explore"
-        options={{ title: 'Explore', tabBarIcon: ({ color, size }) => (<Ionicons name="compass" size={size} color={color} />), }}
-      />
-
-      {/* Tab Tours */}
-      <Tabs.Screen
-        name="mytrip"
-        options={{ title: 'MyTrip', tabBarIcon: ({ color, size }) => (<Ionicons name="bag-outline" size={size} color={color} />), }}
-      />
-
       
       {/* Tab Tours */}
       <Tabs.Screen
-        name="profile"
-        options={{ title: 'Profile', tabBarIcon: ({ color, size }) => (<Ionicons name="person-outline" size={size} color={color} />), }}
+        name="userlist"
+        options={{ title: 'Manage User', tabBarIcon: ({ color, size }) => (<Ionicons name="person-outline" size={size} color={color} />), }}
       />
     </Tabs>
   );

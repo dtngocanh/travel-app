@@ -5,11 +5,17 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
+import { registerUser } from '@/utils/api';
+import { showMessage } from "react-native-flash-message";
+
+
 const SignUpScreen: React.FC = () => {
   const router = useRouter();
   const { colors, fonts } = useContext(ThemeContext);
@@ -20,9 +26,102 @@ const SignUpScreen: React.FC = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
 
-  const handleSignUp = () => {
-    // Xử lý đăng ký ở đây
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [loading, setLoading] = useState(false);
+
+  // Hàm kiểm tra email hợp lệ
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
+
+const handleSignUp = async () => {
+  const newErrors: {
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  } = {};
+
+  // 1️⃣ Kiểm tra email
+  if (!email) {
+    newErrors.email = "Email is required";
+  } else if (!validateEmail(email)) {
+    newErrors.email = "Invalid email address";
+  }
+
+  // 2️⃣ Kiểm tra mật khẩu
+  if (!password) {
+    newErrors.password = "Password is required";
+  } else if (password.length < 6) {
+    newErrors.password = "Password must be at least 6 characters";
+  }
+
+  // 3️⃣ Kiểm tra xác nhận mật khẩu
+  if (!confirmPassword) {
+    newErrors.confirmPassword = "Confirm password is required";
+  } else if (password !== confirmPassword) {
+    newErrors.confirmPassword = "Passwords do not match";
+  }
+
+  // Cập nhật state lỗi để hiển thị bên dưới input
+  setErrors(newErrors);
+
+  // 4️⃣ Nếu không có lỗi validation, tiến hành đăng ký
+  if (Object.keys(newErrors).length === 0) {
+    try {
+      setLoading(true);
+
+      const res = await registerUser(email, password);
+
+      // ✅ Đăng ký thành công
+      showMessage({
+        message: "Đăng ký thành công 🎉",
+        description: "Chào mừng bạn đến với TripGo!",
+        type: "success",
+        icon: "success",
+        duration: 3000,
+        floating: true,
+      });
+
+      router.push("/(auth)/login");
+
+    } catch (error: any) {
+      // console.error("Registration error:", error);
+
+      let errorMessage = "Registration failed";
+
+  // Axios trả về lỗi trong error.response.data
+    if (error?.response?.data) {
+      const data = error.response.data;
+      if (data.code === "auth/email-already-exists") {
+        errorMessage = "Email này đã được sử dụng. Vui lòng thử email khác.";
+      } else if (data.code === "auth/invalid-email") {
+        errorMessage = "Email không hợp lệ.";
+      } else if (data.code === "auth/weak-password") {
+        errorMessage = "Mật khẩu quá yếu. Vui lòng đặt ít nhất 6 ký tự.";
+      } else if (data.message) {
+        errorMessage = data.message;
+      }
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+
+    showMessage({
+      message: "Sign up failed ❌",
+      description: errorMessage,
+      type: "danger",
+      icon: "danger",
+      duration: 3000,
+      floating: true,
+    });
+
+
+    } finally {
+      setLoading(false);
+    }
+  }
+};
+
   const handleSignInRedirect = () => {
     router.push('/(auth)/login'); // quay lại Sign In
   };
@@ -66,7 +165,7 @@ const SignUpScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 16,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -90,6 +189,11 @@ const SignUpScreen: React.FC = () => {
             autoCapitalize="none"
           />
         </View>
+        {errors.email && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular }}>
+            {errors.email}
+          </Text>
+        )}
 
         {/* Password */}
         <View
@@ -100,7 +204,7 @@ const SignUpScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 16,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -133,6 +237,11 @@ const SignUpScreen: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        {errors.password && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular }}>
+            {errors.password}
+          </Text>
+        )}
 
         {/* Confirm Password */}
         <View
@@ -143,7 +252,7 @@ const SignUpScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 24,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -176,6 +285,11 @@ const SignUpScreen: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        {errors.confirmPassword && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular}}>
+            {errors.confirmPassword}
+          </Text>
+        )}
 
         {/* Nút Sign Up */}
         <TouchableOpacity
@@ -193,17 +307,14 @@ const SignUpScreen: React.FC = () => {
           }}
           activeOpacity={0.9}
         >
-          <Text
-            style={{
-              fontFamily: fonts.bold,
-              color: '#fff',
-              fontSize: 18,
-            }}
-          >
-            Sign Up
-          </Text>
+           {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={{ color: '#fff', fontSize: 16, fontFamily: fonts.medium }}>Sign Up</Text>
+        )}
         </TouchableOpacity>
-          {/* ===== Đăng nhập MXH ===== */}
+
+        {/* ===== Đăng nhập MXH ===== */}
         <Text
           style={{
             fontFamily: fonts.regular,

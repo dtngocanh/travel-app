@@ -44,3 +44,5 @@ app-example
 
 #IDEs
 .vscode/
+
+utils/firebase.ts
