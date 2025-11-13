@@ -5,11 +5,14 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
+import { registerUser } from '@/utils/api';
+
 const SignUpScreen: React.FC = () => {
   const router = useRouter();
   const { colors, fonts } = useContext(ThemeContext);
@@ -20,9 +23,81 @@ const SignUpScreen: React.FC = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
 
-  const handleSignUp = () => {
-    // Xử lý đăng ký ở đây
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+
+  // Hàm kiểm tra email hợp lệ
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
+
+const handleSignUp = async () => {
+  const newErrors: {
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  } = {};
+
+  //  Kiểm tra email
+  if (!email) {
+    newErrors.email = "Email is required";
+  } else if (!validateEmail(email)) {
+    newErrors.email = "Invalid email address";
+  }
+
+  // ✅ Kiểm tra mật khẩu
+  if (!password) {
+    newErrors.password = "Password is required";
+  } else if (password.length < 6) {
+    newErrors.password = "Password must be at least 6 characters";
+  }
+
+  // ✅ Kiểm tra xác nhận mật khẩu
+  if (!confirmPassword) {
+    newErrors.confirmPassword = "Confirm password is required";
+  } else if (password !== confirmPassword) {
+    newErrors.confirmPassword = "Passwords do not match";
+  }
+
+  setErrors(newErrors);
+
+  // ✅ Nếu không có lỗi, tiến hành đăng ký
+  if (Object.keys(newErrors).length === 0) {
+    try {
+      const res = await registerUser(email, password);
+
+      // Nếu res có message thì hiển thị, nếu không thì dùng mặc định
+    
+      Alert.alert("Success");
+
+      router.push("/(auth)/login");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      // ✅ Xử lý lỗi an toàn, tránh lỗi undefined
+      let errorMessage = "Registration failed";
+
+      if (typeof error === "string") {
+        errorMessage += `\nMessage: ${error}`;
+      } else if (error?.message) {
+        errorMessage += `\nMessage: ${error.message}`;
+      } else if (error?.code) {
+        errorMessage += `\nCode: ${error.code}`;
+      } else {
+        errorMessage += `\nUnknown error`;
+      }
+
+      if (error?.response) {
+        errorMessage += `\nResponse: ${JSON.stringify(error.response)}`;
+      }
+
+      Alert.alert("Error", errorMessage);
+    }
+  }
+};
+
+
+
   const handleSignInRedirect = () => {
     router.push('/(auth)/login'); // quay lại Sign In
   };
@@ -66,7 +141,7 @@ const SignUpScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 16,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -90,6 +165,11 @@ const SignUpScreen: React.FC = () => {
             autoCapitalize="none"
           />
         </View>
+        {errors.email && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular }}>
+            {errors.email}
+          </Text>
+        )}
 
         {/* Password */}
         <View
@@ -100,7 +180,7 @@ const SignUpScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 16,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -133,6 +213,11 @@ const SignUpScreen: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        {errors.password && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular }}>
+            {errors.password}
+          </Text>
+        )}
 
         {/* Confirm Password */}
         <View
@@ -143,7 +228,7 @@ const SignUpScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 24,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -176,6 +261,11 @@ const SignUpScreen: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        {errors.confirmPassword && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular}}>
+            {errors.confirmPassword}
+          </Text>
+        )}
 
         {/* Nút Sign Up */}
         <TouchableOpacity
@@ -203,7 +293,8 @@ const SignUpScreen: React.FC = () => {
             Sign Up
           </Text>
         </TouchableOpacity>
-          {/* ===== Đăng nhập MXH ===== */}
+
+        {/* ===== Đăng nhập MXH ===== */}
         <Text
           style={{
             fontFamily: fonts.regular,

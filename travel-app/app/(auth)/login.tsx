@@ -5,12 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
-import { push } from 'expo-router/build/global-state/routing';
+import { loginUser } from '../../src/services/authService';
 
 const SignInScreen: React.FC = () => {
   const router = useRouter();
@@ -19,13 +20,50 @@ const SignInScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleSignIn = () => {};
+  // Hàm kiểm tra email hợp lệ
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const handleSignIn = async () => {
+  const newErrors: { email?: string; password?: string } = {};
+
+  if (!email) newErrors.email = 'Email is required';
+  else if (!validateEmail(email)) newErrors.email = 'Invalid email address';
+
+  if (!password) newErrors.password = 'Password is required';
+  else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+
+  setErrors(newErrors);
+
+  if (Object.keys(newErrors).length === 0) {
+    try {
+      const user = await loginUser(email, password); // gọi Client SDK
+      console.log(' Login successful:', user); // log ra console
+      Alert.alert('Success', `Login successful!\nEmail: ${user.email}\nRole: ${user.role}`);
+
+      // Lưu session nếu muốn
+      // await AsyncStorage.setItem('user', JSON.stringify(user));
+
+      // Chuyển sang màn hình chính
+      router.push('/(customer)/explore');
+    } catch (error: any) {
+      console.error('❌ Login failed:', error); // log chi tiết lỗi ra console
+      Alert.alert('Login Failed', error.message || 'Đăng nhập thất bại');
+    }
+  }
+};
+
+
+
   const handleForgotPassword = () => {
-    router.push('/(auth)/forgortpass')
+    router.push('/(auth)/forgortpass');
   };
   const handleSignUp = () => {
-    router.push('/(auth)/signup')
+    router.push('/(auth)/signup');
   };
   const handleLogInSuccess = () => {
     router.replace('../(customer)/index'); // thay thế stack
@@ -70,7 +108,7 @@ const SignInScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 16,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -84,7 +122,7 @@ const SignInScreen: React.FC = () => {
               marginLeft: 12,
               fontSize: 16,
               fontFamily: fonts.regular,
-              color: colors.text, // đảm bảo chữ hiển thị
+              color: colors.text,
             }}
             placeholder="Email address"
             placeholderTextColor={colors.grayText}
@@ -94,6 +132,11 @@ const SignInScreen: React.FC = () => {
             autoCapitalize="none"
           />
         </View>
+        {errors.email && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular }}>
+            {errors.email}
+          </Text>
+        )}
 
         {/* ===== Ô nhập Password ===== */}
         <View
@@ -104,7 +147,7 @@ const SignInScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 8,
+            marginBottom: 4,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -127,9 +170,7 @@ const SignInScreen: React.FC = () => {
             secureTextEntry={!isPasswordVisible}
             autoCapitalize="none"
           />
-          <TouchableOpacity
-            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-          >
+          <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
             <Feather
               name={isPasswordVisible ? 'eye' : 'eye-off'}
               size={20}
@@ -137,13 +178,24 @@ const SignInScreen: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
+        {errors.password && (
+          <Text style={{ color: 'red', fontSize: 12, marginBottom: 12, fontFamily: fonts.regular }}>
+            {errors.password}
+          </Text>
+        )}
 
         {/* ===== Quên mật khẩu ===== */}
         <TouchableOpacity
           onPress={handleForgotPassword}
           style={{ alignSelf: 'flex-end', marginBottom: 24 }}
         >
-          <Text style={{ color: colors.primary, fontSize: 14, fontFamily: fonts.medium }}>
+          <Text
+            style={{
+              color: colors.primary,
+              fontSize: 14,
+              fontFamily: fonts.medium,
+            }}
+          >
             Forgot Password?
           </Text>
         </TouchableOpacity>

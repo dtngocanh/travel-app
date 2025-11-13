@@ -1,28 +1,25 @@
+import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { ENV } from "./config/env.js";
-import { db } from "./db/firebase.js";
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoute.js";
 
 const app = express();
-const PORT = ENV.PORT;
+const PORT = ENV.PORT || 8888;
 
-// Middleware parse JSON
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Route đọc dữ liệu từ collection 'users'
-app.get("/users", async (req, res) => {
-  try {
-    const usersSnapshot = await db.collection("users").get();
-    const users = [];
-    usersSnapshot.forEach(doc => {
-      users.push({ id: doc.id, ...doc.data() });
-    });
-    res.json(users);
-  } catch (error) {
-    console.error("Error getting users:", error);
-    res.status(500).json({ message: "Failed to get users", error });
-  }
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+
+app.get("/", (req, res) => {
+  res.send("🔥 Firebase Backend is running!");
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on PORT: ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(` Server chạy tại http://0.0.0.0:${PORT}`);
 });
+
