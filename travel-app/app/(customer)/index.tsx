@@ -59,7 +59,7 @@ const HomeScreen = () => {
 
         {/* Places */}
         <View className="flex-row justify-between items-center mb-3">
-          <Text className="text-lg font-semibold text-gray-800">Categories</Text>
+          <Text className="text-lg font-semibold text-gray-800">Recommended Tours</Text>
           <Text className="text-amber-500 font-semibold">View all</Text>
         </View>
 
