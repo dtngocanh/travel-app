@@ -6,12 +6,16 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { loginUser } from '../../src/services/authService';
+import { showMessage } from "react-native-flash-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const SignInScreen: React.FC = () => {
   const router = useRouter();
@@ -21,6 +25,7 @@ const SignInScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [loading, setLoading] = useState(false);
 
   // Hàm kiểm tra email hợp lệ
   const validateEmail = (email: string) => {
@@ -29,34 +34,81 @@ const SignInScreen: React.FC = () => {
   };
 
   const handleSignIn = async () => {
-  const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string } = {};
 
-  if (!email) newErrors.email = 'Email is required';
-  else if (!validateEmail(email)) newErrors.email = 'Invalid email address';
+    // 1️⃣ Validate
+    if (!email) newErrors.email = "Email is required";
+    else if (!validateEmail(email)) newErrors.email = "Invalid email address";
 
-  if (!password) newErrors.password = 'Password is required';
-  else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
 
-  setErrors(newErrors);
+    setErrors(newErrors);
 
-  if (Object.keys(newErrors).length === 0) {
+    if (Object.keys(newErrors).length > 0) return;
+
     try {
-      const user = await loginUser(email, password); // gọi Client SDK
-      console.log(' Login successful:', user); // log ra console
-      Alert.alert('Success', `Login successful!\nEmail: ${user.email}\nRole: ${user.role}`);
+      setLoading(true);
 
-      // Lưu session nếu muốn
-      // await AsyncStorage.setItem('user', JSON.stringify(user));
+      // 2️⃣ Call backend/Firebase login
+      const user = await loginUser(email, password); // user = { email, role, idToken }
 
-      // Chuyển sang màn hình chính
-      router.push('/(customer)/explore');
+      showMessage({
+        message: "Login Successful 🎉",
+        description: `Welcome back, ${user.email}!`,
+        type: "success",
+        icon: "success",
+        duration: 2500,
+        floating: true,
+      });
+
+
+      // 3️⃣ Navigate based on role
+      if (user.role === "admin") {
+        router.replace("/(admin)/home"); // admin dashboard
+      } else {
+        router.replace("/(customer)/explore"); // normal user
+      }
     } catch (error: any) {
-      console.error('❌ Login failed:', error); // log chi tiết lỗi ra console
-      Alert.alert('Login Failed', error.message || 'Đăng nhập thất bại');
-    }
-  }
-};
+      // 4️⃣ Handle errors
+      let errorMessage = "Login Failed";
 
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          errorMessage = "This email is already in use. Please try another one.";
+          break;
+        case "auth/invalid-email":
+          errorMessage = "Invalid email address. Please enter a correct format.";
+          break;
+        case "auth/weak-password":
+          errorMessage = "Password is too weak. Please use at least 6 characters.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "This email is not registered.";
+          break;
+        case "auth/wrong-password":
+          errorMessage = "Incorrect password. Please try again.";
+          break;
+        case "auth/invalid-credential":
+          errorMessage = "Invalid login credentials. Please try again.";
+          break;
+        default:
+          if (error.message) errorMessage = error.message;
+          break;
+      }
+
+      showMessage({
+        message: "Login Failed ❌",
+        description: errorMessage,
+        type: "danger",
+        icon: "danger",
+        duration: 3000,
+        floating: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const handleForgotPassword = () => {
@@ -65,9 +117,7 @@ const SignInScreen: React.FC = () => {
   const handleSignUp = () => {
     router.push('/(auth)/signup');
   };
-  const handleLogInSuccess = () => {
-    router.replace('../(customer)/index'); // thay thế stack
-  };
+ 
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -202,7 +252,7 @@ const SignInScreen: React.FC = () => {
 
         {/* ===== Nút Sign In ===== */}
         <TouchableOpacity
-          onPress={handleLogInSuccess}
+          onPress={handleSignIn}
           style={{
             backgroundColor: colors.primary,
             borderRadius: 16,
@@ -216,15 +266,12 @@ const SignInScreen: React.FC = () => {
           }}
           activeOpacity={0.9}
         >
-          <Text
-            style={{
-              fontFamily: fonts.bold,
-              color: '#fff',
-              fontSize: 18,
-            }}
-          >
-            Log In
-          </Text>
+              {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={{ color: '#fff', fontSize: 16, fontFamily: fonts.medium }}>Login</Text>
+                  )}
+          
         </TouchableOpacity>
 
         {/* ===== Đăng nhập MXH ===== */}

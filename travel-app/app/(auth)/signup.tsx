@@ -6,12 +6,15 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { registerUser } from '@/utils/api';
+import { showMessage } from "react-native-flash-message";
+
 
 const SignUpScreen: React.FC = () => {
   const router = useRouter();
@@ -24,6 +27,7 @@ const SignUpScreen: React.FC = () => {
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
 
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
+  const [loading, setLoading] = useState(false);
 
   // Hàm kiểm tra email hợp lệ
   const validateEmail = (email: string) => {
@@ -38,65 +42,85 @@ const handleSignUp = async () => {
     confirmPassword?: string;
   } = {};
 
-  //  Kiểm tra email
+  // 1️⃣ Kiểm tra email
   if (!email) {
     newErrors.email = "Email is required";
   } else if (!validateEmail(email)) {
     newErrors.email = "Invalid email address";
   }
 
-  // ✅ Kiểm tra mật khẩu
+  // 2️⃣ Kiểm tra mật khẩu
   if (!password) {
     newErrors.password = "Password is required";
   } else if (password.length < 6) {
     newErrors.password = "Password must be at least 6 characters";
   }
 
-  // ✅ Kiểm tra xác nhận mật khẩu
+  // 3️⃣ Kiểm tra xác nhận mật khẩu
   if (!confirmPassword) {
     newErrors.confirmPassword = "Confirm password is required";
   } else if (password !== confirmPassword) {
     newErrors.confirmPassword = "Passwords do not match";
   }
 
+  // Cập nhật state lỗi để hiển thị bên dưới input
   setErrors(newErrors);
 
-  // ✅ Nếu không có lỗi, tiến hành đăng ký
+  // 4️⃣ Nếu không có lỗi validation, tiến hành đăng ký
   if (Object.keys(newErrors).length === 0) {
     try {
+      setLoading(true);
+
       const res = await registerUser(email, password);
 
-      // Nếu res có message thì hiển thị, nếu không thì dùng mặc định
-    
-      Alert.alert("Success");
+      // ✅ Đăng ký thành công
+      showMessage({
+        message: "Đăng ký thành công 🎉",
+        description: "Chào mừng bạn đến với TripGo!",
+        type: "success",
+        icon: "success",
+        duration: 3000,
+        floating: true,
+      });
 
       router.push("/(auth)/login");
-    } catch (error: any) {
-      console.error("Registration error:", error);
 
-      // ✅ Xử lý lỗi an toàn, tránh lỗi undefined
+    } catch (error: any) {
+      // console.error("Registration error:", error);
+
       let errorMessage = "Registration failed";
 
-      if (typeof error === "string") {
-        errorMessage += `\nMessage: ${error}`;
-      } else if (error?.message) {
-        errorMessage += `\nMessage: ${error.message}`;
-      } else if (error?.code) {
-        errorMessage += `\nCode: ${error.code}`;
-      } else {
-        errorMessage += `\nUnknown error`;
+  // Axios trả về lỗi trong error.response.data
+    if (error?.response?.data) {
+      const data = error.response.data;
+      if (data.code === "auth/email-already-exists") {
+        errorMessage = "Email này đã được sử dụng. Vui lòng thử email khác.";
+      } else if (data.code === "auth/invalid-email") {
+        errorMessage = "Email không hợp lệ.";
+      } else if (data.code === "auth/weak-password") {
+        errorMessage = "Mật khẩu quá yếu. Vui lòng đặt ít nhất 6 ký tự.";
+      } else if (data.message) {
+        errorMessage = data.message;
       }
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
 
-      if (error?.response) {
-        errorMessage += `\nResponse: ${JSON.stringify(error.response)}`;
-      }
+    showMessage({
+      message: "Sign up failed ❌",
+      description: errorMessage,
+      type: "danger",
+      icon: "danger",
+      duration: 3000,
+      floating: true,
+    });
 
-      Alert.alert("Error", errorMessage);
+
+    } finally {
+      setLoading(false);
     }
   }
 };
-
-
 
   const handleSignInRedirect = () => {
     router.push('/(auth)/login'); // quay lại Sign In
@@ -283,15 +307,11 @@ const handleSignUp = async () => {
           }}
           activeOpacity={0.9}
         >
-          <Text
-            style={{
-              fontFamily: fonts.bold,
-              color: '#fff',
-              fontSize: 18,
-            }}
-          >
-            Sign Up
-          </Text>
+           {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={{ color: '#fff', fontSize: 16, fontFamily: fonts.medium }}>Sign Up</Text>
+        )}
         </TouchableOpacity>
 
         {/* ===== Đăng nhập MXH ===== */}
