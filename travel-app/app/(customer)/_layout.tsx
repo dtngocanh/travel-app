@@ -5,39 +5,58 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false, 
-        tabBarActiveTintColor: '#F59E0B', 
-        tabBarInactiveTintColor: 'gray', 
+        headerShown: false,
+        tabBarActiveTintColor: '#F59E0B',
+        tabBarInactiveTintColor: 'gray',
       }}
     >
-      {/* Tab Home */}
+      {/* Tab Explore */}
       <Tabs.Screen
-        name="index"
+        name="explore"
         options={{
-          title: 'Home',
-           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          title: 'Explore',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="compass-outline" size={size} color={color} />
           ),
         }}
       />
 
-      {/* Tab Tours */}
+      {/* Tab Booking */}
       <Tabs.Screen
-        name="explore"
-        options={{ title: 'Explore', tabBarIcon: ({ color, size }) => (<Ionicons name="compass" size={size} color={color} />), }}
+        name="booking"
+        options={{
+          title: 'Booking',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
+        }}
       />
 
-      {/* Tab Tours */}
+      {/* Tab Saved */}
+      <Tabs.Screen
+        name="saved"
+        options={{
+          title: 'Saved',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bookmark-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="mytrip"
         options={{ title: 'MyTrip', tabBarIcon: ({ color, size }) => (<Ionicons name="bag-outline" size={size} color={color} />), }}
       />
 
-      
-      {/* Tab Tours */}
+      {/* Tab Profile */}
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', tabBarIcon: ({ color, size }) => (<Ionicons name="person-outline" size={size} color={color} />), }}
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
       />
     </Tabs>
   );
