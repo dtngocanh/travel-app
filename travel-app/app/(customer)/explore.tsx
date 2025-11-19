@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { getAllTours } from "../../src/services/tours.service.js";
+import { getAllTours } from "../../src/services/toursService.js";
 
 const ToursScreen = () => {
   const [query, setQuery] = useState("");
@@ -95,10 +95,6 @@ const ToursScreen = () => {
       >
         {loading ? (
           <Text className="text-center text-gray-500 mt-6">Loading...</Text>
-        ) : filteredTours.length === 0 ? (
-          <Text className="text-center text-gray-500 mt-6">
-            No tours found.
-          </Text>
         ) : (
           filteredTours.map((tour) => (
             <TouchableOpacity

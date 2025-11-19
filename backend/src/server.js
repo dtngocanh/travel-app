@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { ENV } from "./config/env.js";
-import toursRoutes from "./routes/tours.route.js";
+import toursRoutes from "./routes/toursRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoute.js";
 
@@ -18,11 +18,11 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
 app.get("/", (req, res) => {
-  res.send("🔥 Firebase Backend is running!");
+  res.send("Firebase Backend is running!");
 });
 
 app.listen(PORT,  () => {
-  console.log(` Server chạy tại http://0.0.0.0:${PORT}`);
+  console.log(` Server đang chạy tại ${PORT}`);
 });
 
 // "0.0.0.0",
