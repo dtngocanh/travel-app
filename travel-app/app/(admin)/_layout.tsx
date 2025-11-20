@@ -9,8 +9,7 @@ import {
 } from "react-native";
 import { Tabs, useRouter, usePathname, Slot } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import '../../global.css'
-
+import "../../global.css";
 
 // Định nghĩa literal paths hợp lệ cho TS
 type MenuPath = "/home" | "/userlist";
@@ -97,14 +96,20 @@ export default function AdminLayout() {
           ),
         }}
       />
-        <Tabs.Screen
+      <Tabs.Screen
         name="_userdetail"
         options={{
-          href: null,              
+          href: null,
           headerShown: false,
         }}
       />
-      
+      <Tabs.Screen
+        name="_addusermodal"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
   );
 }
@@ -122,7 +127,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   menuItemActive: {
-    backgroundColor: "#e0e7ff", 
+    backgroundColor: "#e0e7ff",
   },
   menuLabel: {
     marginLeft: 12,
