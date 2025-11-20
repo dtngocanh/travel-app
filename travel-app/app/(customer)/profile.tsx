@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Ionicons, FontAwesome, Feather } from '@expo/vector-icons';
 import {
   View,
@@ -7,31 +7,87 @@ import {
   TouchableOpacity,
   StatusBar,
   StyleSheet,
+  ScrollView,
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Avatar,TouchableRipple } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getProfile, updateProfile } from '@/utils/api';
+import { getAuth } from 'firebase/auth';
+
 
 const ProfileScreen: React.FC = () => {
   const router = useRouter();
   const { colors, fonts } = useContext(ThemeContext);
   const [editable, setEditable] = useState(false);
 
-  const [firstName, setFirstName] = useState('John');
-  const [lastName, setLastName] = useState('Doe');
-  const [phone, setPhone] = useState('+91-900000009');
-  const [email, setEmail] = useState('john_doe@email.com');
-  const [country, setCountry] = useState('India');
-  const [city, setCity] = useState('Kolkata');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
+
+   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const idToken = await user.getIdToken(); // token firebase
+        const res = await getProfile(idToken);
+
+        setFirstName(res.data.firstName || '');
+        setLastName(res.data.lastName || '');
+        setPhone(res.data.phone || '');
+        setEmail(res.data.email || '');
+        setCountry(res.data.country || '');
+        setCity(res.data.city || '');
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        Alert.alert('Error', 'Failed to load profile.');
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // Hàm xử lý cập nhật dữ liệu
-  const handleSubmit = () => {
-        // Thực hiện logic gửi dữ liệu lên server (API call) ở đây
-        Alert.alert('Success', 'Profile updated successfully!');
-        setEditable(false); 
-    };
+   const handleSubmit = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const idToken = await user.getIdToken();
+
+      const updatedData = {
+        firstName,
+        lastName,
+        phone,
+        city,
+        country,
+      };
+
+      const res = await updateProfile(idToken, updatedData);
+
+      Alert.alert('Success', 'Profile updated successfully!');
+      setEditable(false);
+
+      // Optionally cập nhật state từ response
+      setFirstName(res.data.firstName);
+      setLastName(res.data.lastName);
+      setPhone(res.data.phone);
+      setCity(res.data.city);
+      setCountry(res.data.country);
+    } catch (err) {
+      console.error('Update profile error:', err);
+      Alert.alert('Error', 'Failed to update profile.');
+    }
+  };
 
     // Hàm xử lý chuyển đổi chế độ Edit/Lock
     const handleEditLock = () => {
@@ -39,7 +95,7 @@ const ProfileScreen: React.FC = () => {
         setEditable(!editable);
     };
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle="dark-content" />
 
       <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 32 }}>
@@ -66,7 +122,7 @@ const ProfileScreen: React.FC = () => {
                 size={80}
               />
               <View style={{ marginLeft: 20, justifyContent: 'center' }}>
-                <Text style={[styles.title, { marginTop: 15 }]}>Malinda</Text>
+                <Text style={[styles.title, { marginTop: 15 }]}>{lastName}</Text>
                 <Text
                   style={{
                     fontSize: 15,
@@ -214,7 +270,7 @@ const ProfileScreen: React.FC = () => {
           </View>
         </SafeAreaView>
       </View>
-    </View>
+    </ScrollView>
   );
 };
   

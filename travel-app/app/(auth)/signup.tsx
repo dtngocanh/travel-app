@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
-  Alert,
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -42,21 +41,21 @@ const handleSignUp = async () => {
     confirmPassword?: string;
   } = {};
 
-  // 1️⃣ Kiểm tra email
+  //  Kiểm tra email
   if (!email) {
     newErrors.email = "Email is required";
   } else if (!validateEmail(email)) {
     newErrors.email = "Invalid email address";
   }
 
-  // 2️⃣ Kiểm tra mật khẩu
+  //  Kiểm tra mật khẩu
   if (!password) {
     newErrors.password = "Password is required";
   } else if (password.length < 6) {
     newErrors.password = "Password must be at least 6 characters";
   }
 
-  // 3️⃣ Kiểm tra xác nhận mật khẩu
+  // Kiểm tra xác nhận mật khẩu
   if (!confirmPassword) {
     newErrors.confirmPassword = "Confirm password is required";
   } else if (password !== confirmPassword) {
@@ -66,14 +65,14 @@ const handleSignUp = async () => {
   // Cập nhật state lỗi để hiển thị bên dưới input
   setErrors(newErrors);
 
-  // 4️⃣ Nếu không có lỗi validation, tiến hành đăng ký
+  //  Nếu không có lỗi validation, tiến hành đăng ký
   if (Object.keys(newErrors).length === 0) {
     try {
       setLoading(true);
 
       const res = await registerUser(email, password);
 
-      // ✅ Đăng ký thành công
+      // Đăng ký thành công
       showMessage({
         message: "Đăng ký thành công 🎉",
         description: "Chào mừng bạn đến với TripGo!",
@@ -130,7 +129,12 @@ const handleSignUp = async () => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle="dark-content" />
 
-      <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 32 }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems:'center' }}>
+        <View style={{ 
+                  width: '100%', 
+                  maxWidth: 450, 
+                  paddingHorizontal: 32 // Chuyển padding vào đây
+          }}>
         {/* Tiêu đề */}
         <Text
           style={{
@@ -165,7 +169,7 @@ const handleSignUp = async () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 4,
+            marginBottom: 10,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -204,7 +208,7 @@ const handleSignUp = async () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 4,
+            marginBottom: 10,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -252,7 +256,7 @@ const handleSignUp = async () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 4,
+            marginBottom: 30,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
@@ -401,6 +405,7 @@ const handleSignUp = async () => {
               Login
             </Text>
           </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>

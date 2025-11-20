@@ -5,16 +5,16 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
-  Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { loginUser } from '../../src/services/authService';
+import { checkOrCreateUser } from '../../utils/api'
 import { showMessage } from "react-native-flash-message";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 
 const SignInScreen: React.FC = () => {
@@ -36,7 +36,7 @@ const SignInScreen: React.FC = () => {
   const handleSignIn = async () => {
     const newErrors: { email?: string; password?: string } = {};
 
-    // 1️⃣ Validate
+    //  Validate
     if (!email) newErrors.email = "Email is required";
     else if (!validateEmail(email)) newErrors.email = "Invalid email address";
 
@@ -50,8 +50,21 @@ const SignInScreen: React.FC = () => {
     try {
       setLoading(true);
 
-      // 2️⃣ Call backend/Firebase login
+      //  Call backend/Firebase login
       const user = await loginUser(email, password); // user = { email, role, idToken }
+
+      // Check or create profile in backend DB
+      try {
+        if (!user.uid || !user.email) {
+          console.warn("User UID or email is null, cannot check/create profile");
+        } else {
+          const res = await checkOrCreateUser(user.uid, user.email);
+          console.log("CheckOrCreateUser response:", res.data);
+        }
+      } catch (err) {
+        console.error("checkOrCreateUser error:", err);
+      }
+
 
       showMessage({
         message: "Login Successful 🎉",
@@ -63,14 +76,14 @@ const SignInScreen: React.FC = () => {
       });
 
 
-      // 3️⃣ Navigate based on role
+      //  Navigate based on role
       if (user.role === "admin") {
         router.replace("/(admin)/home"); // admin dashboard
       } else {
         router.replace("/(customer)/explore"); // normal user
       }
     } catch (error: any) {
-      // 4️⃣ Handle errors
+      //  Handle errors
       let errorMessage = "Login Failed";
 
       switch (error.code) {
@@ -123,7 +136,12 @@ const SignInScreen: React.FC = () => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle="dark-content" />
 
-      <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 32 }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems:'center' }}>
+        <View style={{ 
+          width: '100%', 
+          maxWidth: 450, 
+          paddingHorizontal: 32 // Chuyển padding vào đây
+        }}>
         {/* ===== Tiêu đề ===== */}
         <Text
           style={{
@@ -158,11 +176,12 @@ const SignInScreen: React.FC = () => {
             borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            marginBottom: 4,
+            marginBottom: 10,
             shadowColor: '#000',
             shadowOpacity: 0.05,
             shadowRadius: 4,
             shadowOffset: { width: 0, height: 2 },
+            
           }}
         >
           <Feather name="mail" size={20} color={colors.grayText} />
@@ -361,6 +380,7 @@ const SignInScreen: React.FC = () => {
               Sign Up
             </Text>
           </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>

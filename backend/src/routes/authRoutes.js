@@ -1,5 +1,5 @@
 import express from "express";
-import { register, listUsers } from "../controller/auth/authController.js";
+import { register, listUsers } from "../controllers/auth/authController.js";
 import firebaseAuth, { authorizeRole } from "../middlewares/firebaseAuth.js";
 
 const authRouter = express.Router();

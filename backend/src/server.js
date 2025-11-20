@@ -15,7 +15,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/tours", toursRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("Firebase Backend is running!");
