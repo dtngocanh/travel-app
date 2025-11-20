@@ -37,11 +37,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(customer)" options={{ headerShown: false }} />
         <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-        <Stack.Screen name="pages" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="pages/detail"
-          options={{ headerShown: false, animation: 'slide_from_right' }}
-        />
       </Stack>
 
       <FlashMessage 

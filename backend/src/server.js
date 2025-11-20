@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/tours", toursRoutes);
+app.use("/api/tours", toursRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
@@ -23,7 +23,6 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT,  () => {
-  console.log(` Server đang chạy tại ${PORT}`);
+  console.log(` Server running on ${PORT}`);
 });
 
-// "0.0.0.0",
