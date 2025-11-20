@@ -80,7 +80,7 @@ const SignInScreen: React.FC = () => {
       if (user.role === "admin") {
         router.replace("/(admin)/home"); // admin dashboard
       } else {
-        router.replace("/(customer)/index"); // normal user
+        router.replace("/"); // normal user
       }
     } catch (error: any) {
       //  Handle errors
