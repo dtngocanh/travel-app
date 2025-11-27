@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { db, auth } from "../../utils/firebase";
 import { doc, setDoc, serverTimestamp, collection } from "firebase/firestore";
-import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import { useStripe, useElements, CardElement, CardCvcElement, CardExpiryElement, CardNumberElement } from "@stripe/react-stripe-js";
 import { useRouter } from "expo-router";
+import { useNotification } from "../contexts/NotificationContext";
 
 type Tour = {
   id: string;
@@ -23,6 +24,9 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
+
+  const { addNotification } = useNotification();
+
 
   const router = useRouter();
   const handlePayment = async () => {
@@ -53,6 +57,9 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
         createdAt: serverTimestamp(),
       });
 
+      await addNotification(tour.id, tour.name_tour);
+
+
       router.push("./PaymentSuccess")
       alert("Payment completed and booking saved!");
     } catch (err: any) {
@@ -62,7 +69,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-sm space-y-4">
+    <div className="w-full p-6 bg-white rounded-xl shadow-md space-y-4">
       <h3 className="text-md font-semibold mb-4">Payment details</h3>
 
       <div className="p-4 border rounded-md bg-gray-50 mb-4">
@@ -88,7 +95,4 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
       </button>
     </div>
   );
-
-
-
 };
