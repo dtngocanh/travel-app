@@ -11,4 +11,5 @@ async function getAllTours(req, res) {
   }
 }
 
+
 export { getAllTours };

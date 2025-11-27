@@ -7,15 +7,35 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { getAllTours } from "../../utils/api";
+import { useRouter } from "expo-router";
+import { useBooking } from "../../src/contexts/BookingContext";
+import { useAuth } from "../../src/contexts/AuthContex";
+import { useNotification } from "../../src/contexts/NotificationContext";
 
 const ToursScreen = () => {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [tours, setTours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { setSelectedTour } = useBooking();
+
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768 && width < 1024;
+  const isDesktop = width >= 1024;
+
+  const numColumns = isDesktop ? 4 : isTablet ? 2 : 1;
+  const cardSpacing = 16;
+  const horizontalPadding = 16;
+  const cardWidth = numColumns > 1
+    ? (width - horizontalPadding * 2 - cardSpacing * (numColumns - 1)) / numColumns
+    : (width - horizontalPadding * 2 - cardSpacing);
+
 
   useEffect(() => {
     fetchTours();
@@ -31,6 +51,11 @@ const ToursScreen = () => {
       setLoading(false);
     }
   };
+  const handleBookNow = (tour) => {
+    setSelectedTour(tour);
+    router.push("../screens/SelectDateScreen");
+  };
+
 
   const renderStars = (rating) => {
     const stars = [];
@@ -69,22 +94,33 @@ const ToursScreen = () => {
         tour.name_tour?.toLowerCase().includes(query.toLowerCase())
       );
 
-  // Trending destinations (lấy top 3 tour)
   const trendingTours = tours.slice(0, 3);
+
+  const { notifications } = useNotification();
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+
 
   return (
     <SafeAreaView className="flex-1 bg-white px-4 pt-6">
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <View>
-          <Text className="text-gray-500 text-base">Hey Shanto,</Text>
-          <Text className="text-2xl font-bold">Where to next?</Text>
+          <Text className="text-amber-700 text-2xl font-semibold">Welcome, {user?.firstName || "Guest"}</Text>
+          {/* <Text className="text-xl font-bold">Where to next?</Text> */}
         </View>
 
         <TouchableOpacity className="p-2 bg-white rounded-full shadow">
-          <Ionicons name="notifications-outline" size={22} color="#f59e0b" />
+          <Ionicons name="notifications-outline" size={22} color="#f59e0b" onPress={() => router.push("../screens/NotificationsScreen")} />
+          {unreadCount > 0 && (
+            <View className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full items-center justify-center">
+              <Text className="text-white text-xs font-bold">{unreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
+
 
       {/* Search Bar */}
       <View className="flex-row items-center border border-gray-300 rounded-xl px-3 py-2 mb-4">
@@ -118,12 +154,10 @@ const ToursScreen = () => {
               className="w-40 h-40"
               resizeMode="cover"
             />
-            {/* <View className="absolute bottom-2 left-2 bg-white/70 px-2 py-1 rounded">
-              <Text className="font-semibold">{item.name_tour}</Text>
-            </View> */}
           </TouchableOpacity>
         )}
       />
+
 
       {/* Popular Destinations */}
       <View className="flex-row justify-between items-center mb-2">
@@ -133,55 +167,81 @@ const ToursScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 80 }}
-      >
-        {loading ? (
-          <Text className="text-center text-gray-500 mt-6">Loading...</Text>
-        ) : (
-          filteredTours.map((tour) => (
-            <TouchableOpacity
-              key={tour.id || tour.id_tour}
-              activeOpacity={0.8}
-              className="bg-white rounded-2xl mb-5 shadow-md overflow-hidden"
-            >
-              <Image
-                source={{ uri: tour.image_tour }}
-                className="w-full h-48"
-                resizeMode="cover"
-              />
-              <TouchableOpacity className="absolute top-3 right-3 bg-white/80 p-2 rounded-full">
-                <Ionicons name="heart-outline" size={20} color="#f59e0b" />
+      {loading ? (
+        <Text className="text-center text-gray-500 mt-6">Loading...</Text>
+      ) : (
+        <FlatList
+          data={filteredTours}
+          keyExtractor={(item) => item.id || item.id_tour}
+          numColumns={numColumns}
+          contentContainerStyle={{
+            paddingBottom: 80,
+            paddingHorizontal: horizontalPadding,
+          }}
+          columnWrapperStyle={
+            numColumns > 1
+              ? { justifyContent: "space-between", marginBottom: cardSpacing }
+              : undefined
+          }
+          renderItem={({ item }) => {
+            const rating = Number(item.reviews_tour) || 0;
+            return (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={{
+                  width: cardWidth,
+                  marginBottom: cardSpacing,
+                  marginHorizontal: numColumns > 1 ? cardSpacing / 2 : 0,
+                  backgroundColor: "white",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                }}
+              >
+                <Image
+                  source={{ uri: item.image_tour }}
+                  style={{ width: "100%", height: 180 }}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: "rgba(255,255,255,0.8)",
+                    padding: 8,
+                    borderRadius: 999,
+                  }}
+                >
+                  <Ionicons name="heart-outline" size={20} color="#f59e0b" />
+                </TouchableOpacity>
+                <View style={{ padding: 16 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#111" }}>{item.name_tour}</Text>
+                  <Text style={{ color: "#6b7280", marginTop: 4 }}>{item.location_tour} • {item.duration_tour}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+                    {renderStars(rating)}
+                    <Text style={{ color: "#4b5563", fontSize: 12, marginLeft: 4 }}>{rating.toFixed(1)}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+                    <Text style={{ color: "#d97706", fontWeight: "600", fontSize: 16 }}>${item.price_tour}</Text>
+                    <TouchableOpacity
+                      style={{ backgroundColor: "#f59e0b", paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999 }}
+                      onPress={() => handleBookNow(item)}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "500" }}>Book Now</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </TouchableOpacity>
-              <View className="p-4">
-                <Text className="text-lg font-semibold text-gray-900">
-                  {tour.name_tour}
-                </Text>
-                <Text className="text-gray-500 mt-1">
-                  {tour.location_tour} • {tour.duration_tour}
-                </Text>
+            );
+          }}
+        />
 
-                <View className="flex-row items-center mt-2">
-                  {renderStars(tour.reviews_tour || 0)}
-                  <Text className="text-gray-600 text-sm ml-2">
-                    {tour.reviews_tour?.toFixed(1) || "0.0"}
-                  </Text>
-                </View>
-
-                <View className="flex-row justify-between items-center mt-3">
-                  <Text className="text-amber-600 font-semibold text-base">
-                    ${tour.price_tour}
-                  </Text>
-                  <TouchableOpacity className="bg-amber-500 px-4 py-2 rounded-full">
-                    <Text className="text-white font-medium">Book Now</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+      )}
     </SafeAreaView>
   );
 };

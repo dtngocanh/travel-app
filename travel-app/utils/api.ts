@@ -31,6 +31,6 @@ export const updateProfile = (idToken: string, data: any) => {
 
 
 // TOURS
-export const getAllTours = () => {
-  return axios.get(`${API_URL}/tours/`);
-};
+export const getAllTours = () => axios.get(`${API_URL}/tours`);
+export const getTourById = (id) => axios.get(`${API_URL}/tours/${id}`);
+export const createPaymentIntent = (tourId) => axios.post(`${API_URL}/create-payment-intent`, { tourId });

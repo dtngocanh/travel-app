@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -6,25 +6,54 @@ import {
   Platform,
   useWindowDimensions,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { Tabs, useRouter, usePathname, Slot } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import "../../global.css";
+import { useAuth } from "../../src/contexts/AuthContex";
 
 // Định nghĩa literal paths hợp lệ cho TS
 type MenuPath = "/home" | "/userlist";
 
+type MenuItem = {
+  path?: MenuPath;
+  label: string;
+  icon: string;
+  action?: () => void;
+};
+
+
 export default function AdminLayout() {
+  const { logout } = useAuth();
+
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web" && width > 768; // web nếu rộng > 768px
   const router = useRouter();
   const pathname = usePathname(); // Lấy đường dẫn hiện tại trên web
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+    } catch (err) {
+      console.log('Logout error:', err);
+      Alert.alert('Error', 'Failed to logout.');
+    }
+  };
+
   // Danh sách menu sidebar / tab
-  const menuItems: { path: MenuPath; label: string; icon: string }[] = [
+  // const menuItems: { path: MenuPath; label: string; icon: string }[] = [
+  //   { path: "/home", label: "Home", icon: "home-outline" },
+  //   { path: "/userlist", label: "Manage User", icon: "person-outline" },
+  //   { label: "Logout", icon: "log-out-outline", action: handleLogout },
+  // ];
+  const menuItems: MenuItem[] = [
     { path: "/home", label: "Home", icon: "home-outline" },
     { path: "/userlist", label: "Manage User", icon: "person-outline" },
+    { label: "Logout", icon: "log-out-outline", action: handleLogout },
   ];
+
 
   // -------------------- WEB LAYOUT (SIDEBAR) --------------------
   if (isWeb) {
@@ -39,7 +68,11 @@ export default function AdminLayout() {
                 styles.menuItem,
                 pathname === item.path && styles.menuItemActive, // highlight active menu
               ]}
-              onPress={() => router.push(item.path)}
+              // onPress={() => router.push(item.path)}
+              onPress={() => {
+                if (item.action) item.action();
+                else if (item.path) router.push(item.path);
+              }}
             >
               <Ionicons
                 name={item.icon as any}
@@ -73,7 +106,7 @@ export default function AdminLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         tabBarActiveTintColor: "#F59E0B",
         tabBarInactiveTintColor: "gray",
       }}
@@ -82,6 +115,11 @@ export default function AdminLayout() {
         name="home"
         options={{
           title: "Home",
+          headerRight: () => (
+            <Pressable onPress={handleLogout} style={{ marginRight: 15 }}>
+              <Ionicons name="log-out-outline" size={24} color="#B91C1C" />
+            </Pressable>
+          ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),

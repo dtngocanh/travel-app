@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemeContext } from '../_layout';
-import { Avatar,TouchableRipple } from 'react-native-paper';
+import { Avatar, TouchableRipple } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProfile, updateProfile } from '@/utils/api';
 import { getAuth } from 'firebase/auth';
-
+import { useAuth } from '../../src/contexts/AuthContex';
 
 const ProfileScreen: React.FC = () => {
   const router = useRouter();
@@ -30,7 +30,9 @@ const ProfileScreen: React.FC = () => {
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
 
-   useEffect(() => {
+  const { logout } = useAuth();
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const auth = getAuth();
@@ -56,7 +58,7 @@ const ProfileScreen: React.FC = () => {
   }, []);
 
   // Hàm xử lý cập nhật dữ liệu
-   const handleSubmit = async () => {
+  const handleSubmit = async () => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -89,18 +91,30 @@ const ProfileScreen: React.FC = () => {
     }
   };
 
-    // Hàm xử lý chuyển đổi chế độ Edit/Lock
-    const handleEditLock = () => {
-     
-        setEditable(!editable);
-    };
+  // Hàm xử lý chuyển đổi chế độ Edit/Lock
+  const handleEditLock = () => {
+
+    setEditable(!editable);
+  };
+
+  // Logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+    } catch (err) {
+      console.log('Logout error:', err);
+      Alert.alert('Error', 'Failed to logout.');
+    }
+  };
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle="dark-content" />
 
       <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 32 }}>
         {/* ===== Tiêu đề ===== */}
-        <Text
+        {/* <Text
           style={{
             fontFamily: fonts.bold,
             fontSize: 32,
@@ -109,7 +123,7 @@ const ProfileScreen: React.FC = () => {
           }}
         >
           Profile
-        </Text>
+        </Text> */}
 
         {/* ===== Thông tin người dùng ===== */}
         <SafeAreaView style={styles.container}>
@@ -141,8 +155,8 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.menuWrapper}>
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
               <TouchableOpacity onPress={handleEditLock}>
-              <Text>{editable ? 'Lock' : 'Edit'}</Text>
-            </TouchableOpacity>
+                <Text>{editable ? 'Lock' : 'Edit'}</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.action}>
               <FontAwesome name="user-o" color={colors.text} size={20} />
@@ -261,39 +275,49 @@ const ProfileScreen: React.FC = () => {
               />
             </View>
 
-            
+
             {editable && (
               <TouchableOpacity style={[styles.commandButton, { backgroundColor: colors.primary }]} onPress={handleSubmit}>
                 <Text style={[styles.panelButtonTitle, { color: '#fff' }]}>Submit</Text>
               </TouchableOpacity>
             )}
+
+            {/* Logout */}
+          {!editable && (
+            <TouchableOpacity
+              className='bg-amber-700 rounded-lg py-3 mt-4 items-center'
+              onPress={handleLogout}
+            >
+              <Text className='text-white font-bold text-lg'>Logout</Text>
+            </TouchableOpacity>
+          )}
           </View>
         </SafeAreaView>
       </View>
     </ScrollView>
   );
 };
-  
+
 export default ProfileScreen;
 
 
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
   },
   infoSection: {
     paddingHorizontal: 15,
     marginBottom: 25,
   },
-   title: {
+  title: {
     fontSize: 20,
     fontWeight: 'bold',
   },
-   menuWrapper: {
+  menuWrapper: {
     marginTop: 10,
   },
-   menuItem: {
+  menuItem: {
     flexDirection: 'row',
     paddingVertical: 15,
     paddingHorizontal: 30,
@@ -320,7 +344,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FFFFFF',
     shadowColor: '#333333',
-    shadowOffset: {width: -1, height: -3},
+    shadowOffset: { width: -1, height: -3 },
     shadowRadius: 2,
     shadowOpacity: 0.4,
     // elevation: 5,
@@ -375,7 +399,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#FF0000',
     paddingBottom: 5,
   },
-   textInput: {
+  textInput: {
     flex: 1,
     marginTop: -12,
     paddingLeft: 10,

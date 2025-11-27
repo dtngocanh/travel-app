@@ -1,7 +1,7 @@
 import express from "express";
 import {
   getAllTours
-} from "../controller/toursController.js";
+} from "../controllers/toursController.js";
 
 const router = express.Router();
 
