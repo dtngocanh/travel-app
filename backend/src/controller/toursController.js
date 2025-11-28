@@ -66,4 +66,29 @@ async function getAllTours(req, res) {
 //   }
 // }
 
-export { getAllTours };
+
+
+async function getToursbyId(req, res) {
+  try {
+    // 1. Lấy ID từ tham số URL
+    const tourId = req.params.id; 
+    // 2. Sử dụng doc(tourId) để tìm 1 tài liệu duy nhất
+    const docSnapshot = await db.collection("tours").doc(tourId).get();
+    if (!docSnapshot.exists) {
+      return res.status(404).json({ message: "Không tìm thấy Tour với ID này." });
+    }
+    const tourDetails = { id: docSnapshot.id, ...docSnapshot.data() };
+    res.json(tourDetails);
+  } catch (error) {
+    console.log("Lỗi lấy chi tiết tour: ", error);
+    res.status(500).json({ message: "Lỗi server khi lấy chi tiết tour." });
+  }
+}
+
+
+
+export { 
+    getAllTours,
+    getToursbyId,
+    
+};

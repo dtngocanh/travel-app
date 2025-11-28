@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://192.168.1.228:5001/api";
+const API_URL = "http://172.26.6.13:5001/api";
+// const API_URL = "http://192.168.1.5:5001/api";
+// const API_URL = "http://10.0.2.2:5001/api";
 
 export const registerUser = (email: string, password: string) => {
   return axios.post(`${API_URL}/auth/register`, { email, password });
@@ -34,3 +36,13 @@ export const updateProfile = (idToken: string, data: any) => {
 export const getAllTours = () => {
   return axios.get(`${API_URL}/tours/`);
 };
+
+// Get tour by ID
+export function getTourById(id: any) {
+    return axios.get(`${API_URL}/tours/${id}`); 
+}
+
+// Get tour trip by ID of tour
+export function getTripDetailsByTourId(tourId: any) {
+    return axios.get(`${API_URL}/trips/byTour/${tourId}`); 
+}

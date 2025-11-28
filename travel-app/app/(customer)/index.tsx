@@ -11,10 +11,22 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { getAllTours } from "../../utils/api";
+import { router } from "expo-router";
+
+interface Tour {
+  id?: string;
+  id_tour?: string;
+  name_tour: string;
+  location_tour: string;
+  duration_tour: string;
+  image_tour: string;
+  price_tour: number;
+  reviews_tour?: number;
+}
 
 const ToursScreen = () => {
-  const [query, setQuery] = useState("");
-  const [tours, setTours] = useState([]);
+  const [query, setQuery] = useState<string>("");
+  const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +44,7 @@ const ToursScreen = () => {
     }
   };
 
-  const renderStars = (rating) => {
+  const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
@@ -109,7 +121,7 @@ const ToursScreen = () => {
         horizontal
         showsHorizontalScrollIndicator={false}
         data={trendingTours}
-        keyExtractor={(item) => item.id || item.id_tour}
+        keyExtractor={(item, index) => (item.id || item.id_tour || String(index))}
         className="mb-6"
         renderItem={({ item }) => (
           <TouchableOpacity className="mr-4 rounded-2xl overflow-hidden w-40">
@@ -142,6 +154,10 @@ const ToursScreen = () => {
         ) : (
           filteredTours.map((tour) => (
             <TouchableOpacity
+              onPress={() => router.push({
+                pathname: "/(detail)/tourdetail",
+                params: {id: tour.id || tour.id_tour}
+              })}
               key={tour.id || tour.id_tour}
               activeOpacity={0.8}
               className="bg-white rounded-2xl mb-5 shadow-md overflow-hidden"
@@ -165,7 +181,7 @@ const ToursScreen = () => {
                 <View className="flex-row items-center mt-2">
                   {renderStars(tour.reviews_tour || 0)}
                   <Text className="text-gray-600 text-sm ml-2">
-                    {tour.reviews_tour?.toFixed(1) || "0.0"}
+                    {Number(tour.reviews_tour ?? 0).toFixed(1)}
                   </Text>
                 </View>
 

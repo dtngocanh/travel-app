@@ -78,9 +78,9 @@ const SignInScreen: React.FC = () => {
 
       //  Navigate based on role
       if (user.role === "admin") {
-        router.replace("/(admin)/home"); // admin dashboard
+        router.replace("/(admin)/home" as any); // admin dashboard
       } else {
-        router.replace("/(customer)/index"); // normal user
+        router.replace("/(customer)/index" as any); // normal user
       }
     } catch (error: any) {
       //  Handle errors
@@ -125,7 +125,7 @@ const SignInScreen: React.FC = () => {
 
 
   const handleForgotPassword = () => {
-    router.push('/(auth)/forgortpass');
+    router.push('/(auth)/forgotpass');
   };
   const handleSignUp = () => {
     router.push('/(auth)/signup');

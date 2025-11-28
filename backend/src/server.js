@@ -5,6 +5,7 @@ import { ENV } from "./config/env.js";
 import toursRoutes from "./routes/toursRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoute.js";
+import tripsRouter from './routes/tripsRoute.js';
 
 const app = express();
 const PORT = ENV.PORT || 8888;
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/tours", toursRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use('/api/trips', tripsRouter);
 
 
 app.get("/", (req, res) => {

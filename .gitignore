@@ -1,0 +1,13 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Config files (nếu muốn bỏ qua)
+backend/src/config/env.js
+.expo
+.venv
+package.json
+package-lock.json
+backend\src\config\firebase-service-account.json
+travel-app\babel.config.js

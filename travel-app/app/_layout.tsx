@@ -4,6 +4,7 @@ import { colors, fonts } from '../theme';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform } from 'react-native';
 import FlashMessage from "react-native-flash-message";
+import { app } from '../utils/firebase';
 
 export const ThemeContext = createContext({ colors, fonts });
 
@@ -19,10 +20,15 @@ export default function RootLayout() {
 
   // Đợi layout mount xong
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      setTimeout(() => {
-        router.replace('/(auth)/login');
-      }, 0);
+   if (Platform.OS === 'web') {
+        // Sử dụng dynamic import để tải gói Firebase Analytics Web SDK
+        import('firebase/analytics')
+            .then(({ initializeAnalytics }) => {
+                // Khởi tạo Analytics bằng đối tượng app đã được import
+                initializeAnalytics(app); 
+                console.log("Firebase Analytics Web SDK initialized successfully.");
+            })
+            .catch(e => console.warn("Web Analytics failed to initialize:", e));
     }
   }, []);
 

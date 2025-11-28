@@ -105,7 +105,7 @@ const ProfileScreen: React.FC = () => {
             fontFamily: fonts.bold,
             fontSize: 32,
             color: colors.text,
-            marginBottom: 24,
+            marginTop: 50,
           }}
         >
           Profile
@@ -280,6 +280,8 @@ export default ProfileScreen;
 
 const styles = StyleSheet.create({
   container: {
+    
+    margin: 0,
     flex: 1, 
   },
   infoSection: {
