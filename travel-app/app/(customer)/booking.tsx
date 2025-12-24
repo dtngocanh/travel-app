@@ -50,6 +50,12 @@ export default function SuggestTourScreen() {
     return () => unsubscribe();
   }, [user?.uid]);
 
+  // Logic điều hướng xem chi tiết (Giống Index)
+  const handleTourPress = (tour: TourWithDetail) => {
+    const tourId = tour.id || tour.id_tour;
+    router.push(`/(detail)/tourdetail?id=${tourId}`);
+  };
+
   const toggleFavorite = async (tourId: string | number) => {
     if (!user?.uid) {
       alert("Please login to add favorites!");
@@ -82,7 +88,7 @@ export default function SuggestTourScreen() {
       const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as TourWithDetail[];
       const ranked = rankTours(tours, userPref);
       setRankedTours(ranked);
-      setVisibleTours(ranked.slice(0, 8)); // Hiện 8 card ban đầu trên Web
+      setVisibleTours(ranked.slice(0, 8)); 
       setIndex(8);
       setStep(3);
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -93,7 +99,10 @@ export default function SuggestTourScreen() {
     const isFavorite = userFavorites.includes(tourId);
 
     return (
-      <View 
+      <TouchableOpacity 
+        // Khi nhấn vào bất kỳ đâu trên card (trừ các nút con) sẽ vào trang chi tiết
+        onPress={() => handleTourPress(item)}
+        activeOpacity={0.9}
         style={{
           flex: 1,
           margin: 10,
@@ -113,6 +122,7 @@ export default function SuggestTourScreen() {
           <TouchableOpacity
             onPress={() => toggleFavorite(tourId)}
             className="absolute top-3 right-3 bg-white/90 p-2 rounded-full"
+            style={{ zIndex: 10 }}
           >
             <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={22} color={isFavorite ? "#ef4444" : "#1f2937"} />
           </TouchableOpacity>
@@ -134,13 +144,12 @@ export default function SuggestTourScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Ẩn thanh cuộn trình duyệt trên Web */}
       {isWeb && (
         <style dangerouslySetInnerHTML={{ __html: `
           ::-webkit-scrollbar { display: none; }
@@ -161,7 +170,6 @@ export default function SuggestTourScreen() {
       </View>
 
       <View className="flex-1" style={{ paddingHorizontal: containerPadding }}>
-        {/* --- QUIZ SECTION (Giới hạn chiều rộng trên Web) --- */}
         {step < 3 && !loading && (
           <View className="mt-10 self-center w-full" style={{ maxWidth: 550 }}>
             <View className="mb-8 items-center">
@@ -222,7 +230,6 @@ export default function SuggestTourScreen() {
           </View>
         )}
 
-        {/* --- RESULT SECTION (Grid đa cột, ẩn scrollbar) --- */}
         {step === 3 && (
           <View className="flex-1 mt-6">
             <View className="flex-row justify-between items-end mb-8">
@@ -236,15 +243,14 @@ export default function SuggestTourScreen() {
             </View>
             
             <FlatList
-              key={numColumns} // Force render lại grid khi resize màn hình
+              key={numColumns} 
               data={visibleTours}
               numColumns={numColumns}
               keyExtractor={(item) => (item.id || item.id_tour || "").toString()}
               renderItem={renderTourCard}
               showsVerticalScrollIndicator={false}
-              showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 60 }}
-              columnWrapperStyle={numColumns > 1 ? { justifyContent: 'flex-start' } : undefined}
+              columnWrapperStyle={numColumns > 1 ? { gap: 20, marginBottom: 20 } : undefined}
               ListFooterComponent={index < rankedTours.length ? (
                 <TouchableOpacity 
                   onPress={() => {

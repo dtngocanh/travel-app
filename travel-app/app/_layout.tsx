@@ -41,7 +41,7 @@ export default function RootLayout() {
     <AuthProvider>
     <ThemeContext.Provider value={{ colors, fonts }}>
       <NotificationProvider>
-      <PaymentProvider>
+      {/* <PaymentProvider> */}
         <BookingProvider>
           <Stack>
             <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
@@ -53,7 +53,7 @@ export default function RootLayout() {
             <Stack.Screen name="screens" options={{ headerShown: false }} />
           </Stack>
         </BookingProvider>
-      </PaymentProvider>
+      {/* </PaymentProvider> */}
       </NotificationProvider>
 
       <FlashMessage

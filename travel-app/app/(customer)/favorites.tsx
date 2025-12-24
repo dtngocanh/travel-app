@@ -14,19 +14,16 @@ import { db } from "../../utils/firebase";
 import { useAuth } from "../../src/contexts/AuthContex";
 import { collection, onSnapshot, doc, deleteDoc, getDoc } from "firebase/firestore";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router"; // 1. Import useRouter
 
 const FavoritesScreen = () => {
   const { user } = useAuth();
+  const router = useRouter(); // 2. Khởi tạo router
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // --- Tính toán Responsive ---
   const { width } = useWindowDimensions();
-  
-  // Quyết định số cột dựa trên độ rộng màn hình (Web/Tablet/Mobile)
   const numColumns = width >= 1024 ? 3 : width >= 768 ? 2 : 1;
-  
-  // Tính toán khoảng cách và độ rộng Card
   const horizontalPadding = width > 1200 ? (width - 1200) / 2 : 20; 
   const gap = 20;
 
@@ -66,6 +63,12 @@ const FavoritesScreen = () => {
     return () => unsubscribe();
   }, [user]);
 
+  // 3. Logic điều hướng xem chi tiết
+  const handleTourPress = (tour: any) => {
+    const tourId = tour.id || tour.id_tour;
+    router.push(`/(detail)/tourdetail?id=${tourId}`);
+  };
+
   const removeFavorite = async (tourId: string) => {
     if (!user?.uid) return;
     try {
@@ -76,13 +79,18 @@ const FavoritesScreen = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View 
+    <TouchableOpacity 
+      // 4. Bọc toàn bộ Card bằng TouchableOpacity để nhấn xem chi tiết
+      onPress={() => handleTourPress(item)}
+      activeOpacity={0.9}
       style={{
-        flex: 1, // Quan trọng để các cột đều nhau
+        flex: 1,
         margin: gap / 2,
         backgroundColor: "white",
         borderRadius: 16,
         overflow: "hidden",
+        borderWidth: 1,
+        borderColor: "#f3f4f6",
         ...Platform.select({
           web: { boxShadow: "0px 4px 12px rgba(0,0,0,0.08)" },
           default: { elevation: 4 }
@@ -97,9 +105,12 @@ const FavoritesScreen = () => {
             <Ionicons name="image-outline" size={40} color="#9ca3af" />
           </View>
         )}
+        
+        {/* Nút Tim - Nhấn để bỏ thích */}
         <TouchableOpacity
           onPress={() => removeFavorite(item.id)}
           className="absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow-sm"
+          style={{ zIndex: 10 }} // Đảm bảo nút tim luôn nằm trên cùng để nhận click
         >
           <Ionicons name="heart" size={22} color="#ef4444" />
         </TouchableOpacity>
@@ -119,16 +130,17 @@ const FavoritesScreen = () => {
           <Text className="text-amber-600 font-bold text-xl ml-2">${item.price_tour}</Text>
         </View>
 
+        {/* Nút Remove ở dưới - Vẫn giữ chức năng xóa */}
         <TouchableOpacity
           onPress={() => removeFavorite(item.id)}
           activeOpacity={0.7}
           className="mt-4 border border-red-100 bg-red-50 py-3 rounded-xl flex-row justify-center items-center"
         >
           <Ionicons name="trash-outline" size={18} color="#ef4444" />
-          <Text className="text-red-500 font-semibold ml-2">Remove</Text>
+          <Text className="text-red-500 font-semibold ml-2">Remove from Favorites</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -141,7 +153,6 @@ const FavoritesScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-[#f8f9fa]">
-      {/* Header tập trung vào giữa màn hình nếu là Web */}
       <View style={{ paddingHorizontal: horizontalPadding }} className="pt-6 pb-4">
         <Text className="text-3xl font-extrabold text-gray-900">My Favorites</Text>
         <Text className="text-gray-500 text-base mt-1">
@@ -155,10 +166,16 @@ const FavoritesScreen = () => {
           <Text className="text-gray-400 text-xl font-medium mt-4 text-center">
             Your wishlist is empty.
           </Text>
+          <TouchableOpacity 
+            onPress={() => router.push("/")}
+            className="mt-6 bg-amber-500 px-8 py-3 rounded-full"
+          >
+            <Text className="text-white font-bold">Explore Now</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
-          key={numColumns} // Cực kỳ quan trọng: Force re-render khi đổi số cột (resize trình duyệt)
+          key={numColumns}
           data={favorites}
           keyExtractor={(item) => item.id}
           numColumns={numColumns}

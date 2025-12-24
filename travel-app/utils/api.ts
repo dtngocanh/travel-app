@@ -31,6 +31,23 @@ export const updateProfile = (idToken: string, data: any) => {
 
 
 // TOURS
+// export const getAllTours = () => axios.get(`${API_URL}/tours`);
+// export const getTourById = (id) => axios.get(`${API_URL}/tours/${id}`);
+// export const createPaymentIntent = (tourId) => axios.post(`${API_URL}/create-payment-intent`, { tourId });
+
+// TOURS
 export const getAllTours = () => axios.get(`${API_URL}/tours`);
-export const getTourById = (id) => axios.get(`${API_URL}/tours/${id}`);
-export const createPaymentIntent = (tourId) => axios.post(`${API_URL}/create-payment-intent`, { tourId });
+
+export const getTourById = (id: string) => {
+  return axios.get(`${API_URL}/tours/${id}`);
+};
+
+export const createPaymentIntent = (tourId: string) => {
+  return axios.post(`${API_URL}/create-payment-intent`, { tourId });
+};
+
+// /api/trips/byTour/:id
+export const getTripDetailsByTourId = (tourId: string) => {
+  return axios.get(`${API_URL}/trips/byTour/${tourId}`);
+};
+
