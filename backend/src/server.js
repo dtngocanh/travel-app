@@ -2,9 +2,11 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { ENV } from "./config/env.js";
+
 import toursRoutes from "./routes/toursRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoute.js";
+import tripsRouter from './routes/tripsRoute.js';
 import paymentRoutes from "./routes/paymentRoutes.js";
 
 const app = express();
@@ -17,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/tours", toursRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use('/api/trips', tripsRouter);
 app.use("/api", paymentRoutes); 
 
 app.get("/", (req, res) => {
