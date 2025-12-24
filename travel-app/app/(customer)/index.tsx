@@ -271,7 +271,7 @@ const ToursScreen = () => {
                   <FlatList
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    data={tours.slice(0, 5)}
+                    data={tours.slice(0, 10)}
                     keyExtractor={item =>
                       String(item.id || item.id_tour)
                     }
@@ -303,12 +303,6 @@ const ToursScreen = () => {
                     Popular Destinations
                   </Text>
                 </>
-              )}
-
-              {isSearching && (
-                <Text style={styles.sectionTitle}>
-                  Results for "{query}"
-                </Text>
               )}
             </View>
           }
