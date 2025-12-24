@@ -1,5 +1,6 @@
+import { Timestamp } from "firebase/firestore"
 export type FileObject = {
-  uri: string;     // URI của ảnh (file://... trên app, blob URL hoặc base64 trên web)
+  uri: string;     
   name?: string;
   type?: string;
   file?: any;
@@ -30,3 +31,16 @@ export interface AddTourData {
   reviews_tour?: number;
   details?: TourDetail[];
 }
+
+export type TourData = {
+  duration_tour: string
+  id: string
+  id_tour: number
+  image_tour: string
+  location_tour: string
+  name_tour: string
+  price_tour: number
+  reviews_tour: number
+  tourId: string
+}
+

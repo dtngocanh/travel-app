@@ -1,10 +1,8 @@
-import React from "react";
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
- 
-  const TabContent = () => (
+  return (
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -18,7 +16,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="flame-outline" size={size} color={color} />
+            <Ionicons name="compass-outline" size={size} color={color} />
           ),
         }}
       />
@@ -27,7 +25,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="booking"
         options={{
-          title: 'Booking',
+          title: 'Plan',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
@@ -36,11 +34,11 @@ export default function TabLayout() {
 
       {/* Tab Saved */}
       <Tabs.Screen
-        name="saved"
+        name="favorites"
         options={{
-          title: 'Saved',
+          title: 'Favorites',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart-outline" size={size} color={color} />
+            <Ionicons name="bookmark-outline" size={size} color={color} />
           ),
         }}
       />
@@ -62,10 +60,4 @@ export default function TabLayout() {
       />
     </Tabs>
   );
-
-
-  return (
-    <TabContent />
-  );
-
 }
