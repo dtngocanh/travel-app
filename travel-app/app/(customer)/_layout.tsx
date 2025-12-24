@@ -1,16 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useWindowDimensions } from 'react-native'; // Thêm dòng này
 
 export default function TabLayout() {
+  const { width } = useWindowDimensions(); // Lấy chiều rộng màn hình
+  const isWeb = width >= 768; // Kiểm tra nếu là Web/Tablet
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: '#F59E0B',
         tabBarInactiveTintColor: 'gray',
+        // CHỈ THÊM DÒNG NÀY:
+        tabBarStyle: isWeb ? { display: 'none' } : {}, 
       }}
     >
-      {/* Tab Explore */}
+      {/* Giữ nguyên toàn bộ phần dưới của bạn */}
       <Tabs.Screen
         name="index"
         options={{
@@ -21,7 +27,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Tab Booking */}
       <Tabs.Screen
         name="booking"
         options={{
@@ -32,7 +37,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Tab Saved */}
       <Tabs.Screen
         name="favorites"
         options={{
@@ -45,10 +49,14 @@ export default function TabLayout() {
 
       <Tabs.Screen
         name="mytrip"
-        options={{ title: 'MyTrip', tabBarIcon: ({ color, size }) => (<Ionicons name="bag-outline" size={size} color={color} />), }}
+        options={{ 
+          title: 'MyTrip', 
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="bag-outline" size={size} color={color} />
+          ), 
+        }}
       />
 
-      {/* Tab Profile */}
       <Tabs.Screen
         name="profile"
         options={{
