@@ -1,7 +1,7 @@
 import axios from "axios";
 import { auth } from "./firebase";
 
-const API_URL = "http://192.168.1.26:5001/api";
+const API_URL = "http://172.26.1.235:5001/api";
 
 // Lấy token hợp lệ mới nhất từ Firebase
 const getValidToken = async () => {
