@@ -4,7 +4,9 @@ import {
   View, 
   FlatList, 
   TouchableOpacity, 
-  ActivityIndicator 
+  ActivityIndicator,
+  SafeAreaView,
+  StatusBar
 } from "react-native";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "../../utils/firebase";
@@ -13,8 +15,8 @@ import TabButon, { TabbutonType } from "../(mytrip)/Tabbutton";
 import TripCard from "../(mytrip)/Element";
 
 export enum Triptabs {
-  UPCOMING,
-  COMPLETE,
+  UPCOMING = 0,
+  COMPLETE = 1,
 }
 
 const Tabscreen = () => {
@@ -45,6 +47,7 @@ const Tabscreen = () => {
 
   const fetchBookings = async () => {
     try {
+      setLoading(true);
       const userId = auth.currentUser?.uid;
       if (!userId) {
         setBooking([]);
@@ -69,10 +72,17 @@ const Tabscreen = () => {
     fetchBookings();
   }, []);
 
+  // --- LOGIC FILTER ĐÃ SỬA THEO Ý BẠN ---
   const filtered = booking
-    .filter((item) =>
-      selecttab === Triptabs.COMPLETE ? item.status === "paid" : item.status === "complete"
-    )
+    .filter((item) => {
+      if (selecttab === Triptabs.COMPLETE) {
+        // Tab Complete: Bây giờ sẽ hiện các tour có status là "paid"
+        return item.status === "paid";
+      } else {
+        // Tab Upcoming: Hiện các tour có status khác "paid" (ví dụ "complete", "pending"...)
+        return item.status !== "paid";
+      }
+    })
     .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
 
   if (loading) {
@@ -84,47 +94,55 @@ const Tabscreen = () => {
   }
 
   return (
-    <View className="flex-1 bg-gray-50 pt-5 px-4">
-      <TabButon
-        button={buttons}
-        selecttab={selecttab}
-        setSelecttab={setSelecttab}
-      />
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <StatusBar barStyle="dark-content" />
+      
+      {/* pt-16 đẩy tab xuống thấp để máy ảo dễ tương tác */}
+      <View className="flex-1 px-4 pt-16">
+        
+        <View style={{ zIndex: 999, elevation: 5 }} className="mb-4">
+          <TabButon
+            button={buttons}
+            selecttab={selecttab}
+            setSelecttab={(index: number) => setSelecttab(index)}
+          />
+        </View>
 
-      <View className="py-4">
-        <Text className="text-xl font-bold text-gray-800">
-          {selecttab === Triptabs.UPCOMING ? "Upcoming Trips" : "Completed Trips"}
-        </Text>
+        <View className="py-2">
+          <Text className="text-2xl font-bold text-gray-800">
+            {selecttab === Triptabs.UPCOMING ? "Upcoming Trips" : "Completed Trips"}
+          </Text>
+        </View>
+
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View className="h-4" />}
+          contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity 
+              onPress={() => handleTourPress(item)}
+              activeOpacity={0.8} 
+              className="bg-white rounded-2xl shadow-sm overflow-hidden"
+              style={{ elevation: 2 }}
+            >
+              <TripCard
+                dates={item.createdAt?.toLocaleDateString ? item.createdAt.toLocaleDateString("vi-VN") : "N/A"}
+                nametour={item.tourData?.name_tour || "Unknown Tour"}
+                imagetour={item.tourData?.image_tour || ""} 
+                duration={item.tourData?.duration_tour || "N/A"}
+              />
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={() => (
+            <View className="flex-1 mt-20 items-center justify-center">
+              <Text className="text-gray-400 text-lg">Không có dữ liệu phù hợp.</Text>
+            </View>
+          )}
+        />
       </View>
-
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View className="h-4" />}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            onPress={() => handleTourPress(item)}
-            // Sử dụng activeOpacity cơ bản, không dùng scale hay transition
-            activeOpacity={0.7} 
-            className="bg-white rounded-2xl"
-          >
-            <TripCard
-              dates={item.createdAt?.toLocaleDateString ? item.createdAt.toLocaleDateString("en-US") : "N/A"}
-              nametour={item.tourData?.name_tour || "Unknown Tour"}
-              imagetour={item.tourData?.image_tour || ""} 
-              duration={item.tourData?.duration_tour || "N/A"}
-            />
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={() => (
-          <View className="mt-20 items-center">
-            <Text className="text-gray-400">No trips found.</Text>
-          </View>
-        )}
-      />
-    </View>
+    </SafeAreaView>
   );
 };
 
