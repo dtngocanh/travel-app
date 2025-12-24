@@ -63,7 +63,7 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
 
       router.push("./PaymentSuccess")
     } catch (err: any) {
-      console.error(err);
+      // console.error(err);
       Alert.alert("Error", "Payment or saving booking failed!");
     }
   };

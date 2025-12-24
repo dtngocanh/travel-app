@@ -4,6 +4,7 @@ import { doc, setDoc, serverTimestamp, collection } from "firebase/firestore";
 import { useStripe, useElements, CardElement, CardCvcElement, CardExpiryElement, CardNumberElement } from "@stripe/react-stripe-js";
 import { useRouter } from "expo-router";
 import { useNotification } from "../contexts/NotificationContext";
+import { useBooking } from "../contexts/BookingContext";
 
 type Tour = {
   id: string;
@@ -27,14 +28,15 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
 
   const { addNotification } = useNotification();
 
+  const { clearBooking } = useBooking();
 
   const router = useRouter();
   const handlePayment = async () => {
+    if (loading || !stripe || !elements) return;
     try {
+      setLoading(true);
       if (!auth.currentUser) throw new Error("User not logged in");
       const userId = auth.currentUser.uid;
-
-      if (!stripe || !elements) return;
 
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) return;
@@ -59,12 +61,14 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
 
       await addNotification(tour.id, tour.name_tour);
 
-
+      clearBooking();
       router.push("./PaymentSuccess")
-      alert("Payment completed and booking saved!");
+      // alert("Payment completed and booking saved!");
     } catch (err: any) {
-      console.error(err);
+      // console.error(err);
       alert(err.message || "Payment or saving booking failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,18 +76,21 @@ export const PaymentButton: React.FC<PaymentButtonProps> = ({ clientSecret, tour
     <div className="w-full p-6 bg-white rounded-xl shadow-md space-y-4">
       <h3 className="text-md font-semibold mb-4">Payment details</h3>
 
-      <div className="p-4 border rounded-md bg-gray-50 mb-4">
-        {stripe && elements && (
+        <div className="p-4 border rounded-md bg-gray-50 mb-4">
           <CardElement
             options={{
+              hidePostalCode: true,
               style: {
-                base: { fontSize: "16px", color: "#111827", "::placeholder": { color: "#9ca3af" } },
+                base: {
+                  fontSize: "16px",
+                  color: "#111827",
+                  "::placeholder": { color: "#9ca3af" },
+                },
                 invalid: { color: "#ef4444" },
               },
             }}
           />
-        )}
-      </div>
+        </div>
 
       <button
         onClick={handlePayment}

@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -36,16 +37,19 @@ const ToursScreen = () => {
   const [userFavorites, setUserFavorites] = useState<string[]>([]);
 
   const { width } = useWindowDimensions();
-  // Ngưỡng để xác định giao diện Web/Tablet
-  const isWebLayout = width >= 768;
+
+  /* ================= CONFIG ================= */
+  const isWebLayout = Platform.OS === "web" && width >= 768;
   const numColumns = width >= 1024 ? 4 : width >= 768 ? 2 : 1;
   const unreadCount = notifications.filter(n => !n.read).length;
+  const isSearching = query.trim().length > 0;
 
+  /* ================= FETCH TOURS ================= */
   useEffect(() => {
     const fetchTours = async () => {
       try {
         const res = await getAllTours();
-        setTours(res.data);
+        setTours(res.data || []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -55,44 +59,96 @@ const ToursScreen = () => {
     fetchTours();
   }, []);
 
+  /* ================= FAVORITES ================= */
   useEffect(() => {
     if (!user?.uid) return;
-    return onSnapshot(collection(db, "users", user.uid, "favorites"), (snap) => {
-      setUserFavorites(snap.docs.map(d => d.id));
-    });
+    return onSnapshot(
+      collection(db, "users", user.uid, "favorites"),
+      snap => {
+        setUserFavorites(snap.docs.map(d => d.id));
+      }
+    );
   }, [user?.uid]);
 
+  /* ================= FILTER ================= */
+  const filteredTours = tours.filter(tour => {
+    const keyword = query.toLowerCase().trim();
+    if (!keyword) return true;
+
+    return (
+      tour.name_tour?.toLowerCase().includes(keyword) ||
+      tour.location_tour?.toLowerCase().includes(keyword)
+    );
+  });
+
+  /* ================= HANDLERS ================= */
   const handleTourPress = (tour: any) => {
     router.push(`/(detail)/tourdetail?id=${tour.id || tour.id_tour}`);
   };
 
   const toggleFavorite = async (tourId: string) => {
-    if (!user?.uid) return alert("Please login!");
+    if (!user?.uid) {
+      alert("Please login!");
+      return;
+    }
     const ref = doc(db, "users", user.uid, "favorites", tourId);
-    userFavorites.includes(tourId) ? await deleteDoc(ref) : await setDoc(ref, { addedAt: new Date() });
+    if (userFavorites.includes(tourId)) {
+      await deleteDoc(ref);
+    } else {
+      await setDoc(ref, { addedAt: new Date() });
+    }
   };
 
+  /* ================= RENDER ITEM ================= */
   const renderTourItem = ({ item }: any) => {
-    const tourId = (item.id || item.id_tour).toString();
+    const tourId = String(item.id || item.id_tour);
     const isFavorite = userFavorites.includes(tourId);
-    // Tính toán độ rộng card dựa trên số cột
-    const cardWidth = (width - 32 - (numColumns - 1) * 16) / numColumns;
+    const cardWidth =
+      (width - 32 - (numColumns - 1) * 16) / numColumns;
 
     return (
-      <TouchableOpacity 
-        style={[styles.card, { width: cardWidth }]} 
+      <TouchableOpacity
+        style={[styles.card, { width: cardWidth }]}
         onPress={() => handleTourPress(item)}
       >
-        <Image source={{ uri: item.image_tour || "https://via.placeholder.com/150" }} style={styles.cardImage} />
-        <TouchableOpacity style={styles.favBtn} onPress={() => toggleFavorite(tourId)}>
-          <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={20} color={isFavorite ? "#ef4444" : "#9ca3af"} />
+        <Image
+          source={{
+            uri: item.image_tour || "https://via.placeholder.com/150",
+          }}
+          style={styles.cardImage}
+        />
+
+        <TouchableOpacity
+          style={styles.favBtn}
+          onPress={() => toggleFavorite(tourId)}
+        >
+          <Ionicons
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={20}
+            color={isFavorite ? "#ef4444" : "#9ca3af"}
+          />
         </TouchableOpacity>
+
         <View style={styles.cardContent}>
-          <Text numberOfLines={1} style={styles.cardTitle}>{item.name_tour}</Text>
-          <Text style={styles.cardLoc}>{item.location_tour}</Text>
+          <Text numberOfLines={1} style={styles.cardTitle}>
+            {item.name_tour}
+          </Text>
+
+          <Text style={styles.cardLoc}>
+            {item.location_tour}
+          </Text>
+
           <View style={styles.cardFooter}>
-            <Text style={styles.cardPrice}>${item.price_tour}</Text>
-            <TouchableOpacity style={styles.bookBtn} onPress={() => { setSelectedTour(item); router.push("../screens/SelectDateScreen"); }}>
+            <Text style={styles.cardPrice}>
+              ${item.price_tour}
+            </Text>
+            <TouchableOpacity
+              style={styles.bookBtn}
+              onPress={() => {
+                setSelectedTour(item);
+                router.push("../screens/SelectDateScreen");
+              }}
+            >
               <Text style={styles.bookBtnText}>Book</Text>
             </TouchableOpacity>
           </View>
@@ -101,25 +157,30 @@ const ToursScreen = () => {
     );
   };
 
+  /* ================= UI ================= */
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
           headerShown: true,
           headerTitle: "",
+          headerShadowVisible: false,
           headerLeft: () => (
             <View style={styles.headerLeft}>
               <Text style={styles.welcomeSub}>Welcome back,</Text>
-              <Text style={styles.welcomeName}>{user?.firstName || "Guest"}</Text>
+              <Text style={styles.welcomeName}>
+                {user?.firstName || "Guest"}
+              </Text>
             </View>
           ),
           headerRight: () => (
             <View style={styles.headerRight}>
-              {/* HIỂN THỊ 5 TAB NAVIGATION TRÊN WEB */}
               {isWebLayout && (
                 <View style={styles.webNav}>
                   <TouchableOpacity onPress={() => router.push("/")}>
-                    <Text style={[styles.navText, { color: '#f59e0b' }]}>Explore</Text>
+                    <Text style={[styles.navText, { color: "#f59e0b" }]}>
+                      Explore
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => router.push("/mytrip")}>
                     <Text style={styles.navText}>My Trip</Text>
@@ -135,53 +196,116 @@ const ToursScreen = () => {
                   </TouchableOpacity>
                 </View>
               )}
-              
-              <TouchableOpacity onPress={() => router.push("../screens/NotificationsScreen")} style={styles.notiBtn}>
-                <Ionicons name="notifications-outline" size={24} color="#f59e0b" />
-                {unreadCount > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount}</Text></View>}
+
+              <TouchableOpacity
+                onPress={() =>
+                  router.push("../screens/NotificationsScreen")
+                }
+                style={styles.notiBtn}
+              >
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color="#f59e0b"
+                />
+                {unreadCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {unreadCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
           ),
-          headerStyle: { backgroundColor: 'white' },
-          headerShadowVisible: false,
         }}
       />
 
       {loading ? (
-        <ActivityIndicator color="#f59e0b" size="large" style={{ flex: 1 }} />
+        <ActivityIndicator
+          color="#f59e0b"
+          size="large"
+          style={{ flex: 1 }}
+        />
       ) : (
         <FlatList
-          data={tours.filter(t => t.name_tour?.toLowerCase().includes(query.toLowerCase()))}
-          keyExtractor={(item, index) => (item.id || item.id_tour || index).toString()}
+          data={filteredTours}
+          renderItem={renderTourItem}
+          keyExtractor={item =>
+            String(item.id || item.id_tour)
+          }
           numColumns={numColumns}
-          key={numColumns} // Force re-render khi đổi số cột
+          key={numColumns}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: 40,
+          }}
+          columnWrapperStyle={
+            numColumns > 1
+              ? { gap: 16, marginBottom: 16 }
+              : undefined
+          }
           ListHeaderComponent={
             <View style={styles.listHeader}>
+              {/* SEARCH */}
               <View style={styles.searchBar}>
-                <Ionicons name="search" size={20} color="#9ca3af" />
-                <TextInput placeholder="Search destinations..." style={styles.searchInput} value={query} onChangeText={setQuery} />
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color="#9ca3af"
+                />
+                <TextInput
+                  placeholder="Search destinations..."
+                  style={styles.searchInput}
+                  value={query}
+                  onChangeText={setQuery}
+                />
               </View>
-              <Text style={styles.sectionTitle}>Trending Now</Text>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={tours.slice(0, 5)}
-                renderItem={({ item }) => (
-                  <TouchableOpacity style={styles.trendingItem} onPress={() => handleTourPress(item)}>
-                    <Image source={{ uri: item.image_tour }} style={styles.trendingImg} />
-                    <View style={styles.trendingOverlay}>
-                      <Text style={styles.trendingText} numberOfLines={1}>{item.name_tour}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-                style={{ marginBottom: 25 }}
-              />
-              <Text style={styles.sectionTitle}>Popular Destinations</Text>
+
+              {!isSearching && (
+                <>
+                  <Text style={styles.sectionTitle}>
+                    Trending Tours
+                  </Text>
+
+                  <FlatList
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    data={tours.slice(0, 10)}
+                    keyExtractor={item =>
+                      String(item.id || item.id_tour)
+                    }
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.trendingItem}
+                        onPress={() =>
+                          handleTourPress(item)
+                        }
+                      >
+                        <Image
+                          source={{ uri: item.image_tour }}
+                          style={styles.trendingImg}
+                        />
+                        <View style={styles.trendingOverlay}>
+                          <Text
+                            style={styles.trendingText}
+                            numberOfLines={1}
+                          >
+                            {item.name_tour}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    )}
+                    style={{ marginBottom: 25 }}
+                  />
+
+                  <Text style={styles.sectionTitle}>
+                    Popular Destinations
+                  </Text>
+                </>
+              )}
             </View>
           }
-          renderItem={renderTourItem}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-          columnWrapperStyle={numColumns > 1 ? { gap: 16, marginBottom: 16 } : null}
         />
       )}
     </SafeAreaView>
@@ -194,17 +318,17 @@ const styles = StyleSheet.create({
   welcomeSub: { fontSize: 12, color: '#6b7280' },
   welcomeName: { fontSize: 18, fontWeight: 'bold', color: '#92400e' },
   headerRight: { flexDirection: 'row', alignItems: 'center', paddingRight: 16, gap: 20 },
-  
+
   // Style cho 5 Tabs trên Web
-  webNav: { 
-    flexDirection: 'row', 
+  webNav: {
+    flexDirection: 'row',
     gap: 30, // Khoảng cách giữa các tab
     marginRight: 20,
     alignItems: 'center'
   },
-  navText: { 
-    fontSize: 15, 
-    fontWeight: '600', 
+  navText: {
+    fontSize: 15,
+    fontWeight: '600',
     color: '#4b5563',
     paddingVertical: 8
   },
@@ -233,3 +357,4 @@ const styles = StyleSheet.create({
 });
 
 export default ToursScreen;
+

@@ -31,7 +31,7 @@ const customSortItineraries = (tripItineraries) => {
 
 
 async function getTripdetailbyTourId(req, res) {
-    console.log("--- Bắt đầu xử lý getTripdetailbyTourId ---");
+    // console.log("--- Bắt đầu xử lý getTripdetailbyTourId ---");
   try {
     // 1. Lấy ID tour từ tham số URL
       const tourId = req.params.tourId;
@@ -59,11 +59,11 @@ async function getTripdetailbyTourId(req, res) {
             ...doc.data() 
         }));
         const sortedItineraries = customSortItineraries(tripItineraries);
-    console.log(`Số lượng lịch trình tìm thấy cho Tour ID ${tourId}: ${querySnapshot.docs.length}`);
+    // console.log(`Số lượng lịch trình tìm thấy cho Tour ID ${tourId}: ${querySnapshot.docs.length}`);
   return res.status(200).json(tripItineraries, sortedItineraries);
     
   } catch (error) {
-    console.log("Lỗi lấy chi tiết trip: ", error);
+    // console.log("Lỗi lấy chi tiết trip: ", error);
     res.status(500).json({ message: "Lỗi server khi lấy chi tiết trip." });
   }
 }
