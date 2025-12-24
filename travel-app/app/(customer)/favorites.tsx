@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   useWindowDimensions,
+  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // Thêm cái này
+import { SafeAreaView } from "react-native-safe-area-context";
 import { db } from "../../utils/firebase";
 import { useAuth } from "../../src/contexts/AuthContex";
 import { collection, onSnapshot, doc, deleteDoc, getDoc } from "firebase/firestore";
@@ -18,13 +19,21 @@ const FavoritesScreen = () => {
   const { user } = useAuth();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // --- Tính toán Responsive ---
   const { width } = useWindowDimensions();
+  
+  // Quyết định số cột dựa trên độ rộng màn hình (Web/Tablet/Mobile)
+  const numColumns = width >= 1024 ? 3 : width >= 768 ? 2 : 1;
+  
+  // Tính toán khoảng cách và độ rộng Card
+  const horizontalPadding = width > 1200 ? (width - 1200) / 2 : 20; 
+  const gap = 20;
 
   useEffect(() => {
     if (!user?.uid) return;
 
     const favCol = collection(db, "users", user.uid, "favorites");
-
     const unsubscribe = onSnapshot(favCol, async (snapshot) => {
       const tourIds = snapshot.docs.map((doc) => doc.id);
 
@@ -42,7 +51,6 @@ const FavoritesScreen = () => {
               if (!tourDoc.exists()) return null;
               return { id: tourId, ...tourDoc.data() };
             } catch (err) {
-              console.error("Error fetching tour", tourId, err);
               return null;
             }
           })
@@ -67,111 +75,99 @@ const FavoritesScreen = () => {
     }
   };
 
+  const renderItem = ({ item }: { item: any }) => (
+    <View 
+      style={{
+        flex: 1, // Quan trọng để các cột đều nhau
+        margin: gap / 2,
+        backgroundColor: "white",
+        borderRadius: 16,
+        overflow: "hidden",
+        ...Platform.select({
+          web: { boxShadow: "0px 4px 12px rgba(0,0,0,0.08)" },
+          default: { elevation: 4 }
+        })
+      }}
+    >
+      <View>
+        {item.image_tour ? (
+          <Image source={{ uri: item.image_tour }} className="w-full h-56" resizeMode="cover" />
+        ) : (
+          <View className="w-full h-56 bg-gray-200 items-center justify-center">
+            <Ionicons name="image-outline" size={40} color="#9ca3af" />
+          </View>
+        )}
+        <TouchableOpacity
+          onPress={() => removeFavorite(item.id)}
+          className="absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow-sm"
+        >
+          <Ionicons name="heart" size={22} color="#ef4444" />
+        </TouchableOpacity>
+      </View>
+
+      <View className="p-4 flex-1">
+        <View className="flex-row justify-between items-start mb-2">
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-gray-900" numberOfLines={1}>
+              {item.name_tour || "No Name"}
+            </Text>
+            <View className="flex-row items-center mt-1">
+              <Ionicons name="location-outline" size={14} color="#6b7280" />
+              <Text className="text-gray-500 ml-1 text-sm">{item.location_tour || "Unknown"}</Text>
+            </View>
+          </View>
+          <Text className="text-amber-600 font-bold text-xl ml-2">${item.price_tour}</Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => removeFavorite(item.id)}
+          activeOpacity={0.7}
+          className="mt-4 border border-red-100 bg-red-50 py-3 rounded-xl flex-row justify-center items-center"
+        >
+          <Ionicons name="trash-outline" size={18} color="#ef4444" />
+          <Text className="text-red-500 font-semibold ml-2">Remove</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+      <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator size="large" color="#f59e0b" />
-        <Text className="mt-2 text-gray-500">Loading your favorites...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#fbfbfb]">
-      {/* Header của trang Favorites */}
-      <View className="px-5 pt-4 pb-2">
-        <Text className="text-2xl font-bold text-gray-900">My Favorites</Text>
-        <Text className="text-gray-500 text-sm">You have {favorites.length} saved destinations</Text>
+    <SafeAreaView className="flex-1 bg-[#f8f9fa]">
+      {/* Header tập trung vào giữa màn hình nếu là Web */}
+      <View style={{ paddingHorizontal: horizontalPadding }} className="pt-6 pb-4">
+        <Text className="text-3xl font-extrabold text-gray-900">My Favorites</Text>
+        <Text className="text-gray-500 text-base mt-1">
+          You have saved {favorites.length} destinations to your wishlist.
+        </Text>
       </View>
 
       {favorites.length === 0 ? (
         <View className="flex-1 items-center justify-center px-10">
-          <Ionicons name="heart-dislike-outline" size={80} color="#d1d5db" />
-          <Text className="text-gray-500 text-lg font-medium mt-4 text-center">
-            No favorites yet. Start exploring and save your favorite tours!
+          <Ionicons name="heart-dislike-outline" size={100} color="#e5e7eb" />
+          <Text className="text-gray-400 text-xl font-medium mt-4 text-center">
+            Your wishlist is empty.
           </Text>
         </View>
       ) : (
         <FlatList
+          key={numColumns} // Cực kỳ quan trọng: Force re-render khi đổi số cột (resize trình duyệt)
           data={favorites}
           keyExtractor={(item) => item.id}
-          // Chỉnh Margin Top và Padding ở đây
+          numColumns={numColumns}
           contentContainerStyle={{ 
-            paddingHorizontal: 20, 
-            paddingTop: 16, // Khoảng cách so với tiêu đề
+            paddingHorizontal: horizontalPadding - (gap / 2), 
             paddingBottom: 40 
           }}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <View 
-              style={{
-                marginBottom: 20,
-                backgroundColor: "white",
-                borderRadius: 20,
-                overflow: "hidden",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 10,
-                elevation: 4,
-              }}
-            >
-              <View>
-                {item.image_tour ? (
-                  <Image
-                    source={{ uri: item.image_tour }}
-                    className="w-full h-48"
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View className="w-full h-48 bg-gray-200 items-center justify-center">
-                    <Ionicons name="image-outline" size={40} color="#9ca3af" />
-                  </View>
-                )}
-                
-                {/* Nút Xóa nhanh ở góc ảnh */}
-                <TouchableOpacity
-                  onPress={() => removeFavorite(item.id)}
-                  className="absolute top-3 right-3 bg-white/90 p-2 rounded-full"
-                >
-                  <Ionicons name="heart" size={22} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-
-              <View className="p-4">
-                <View className="flex-row justify-between items-start">
-                  <View className="flex-1">
-                    <Text className="text-lg font-bold text-gray-900" numberOfLines={1}>
-                      {item.name_tour || "No Name"}
-                    </Text>
-                    <View className="flex-row items-center mt-1">
-                      <Ionicons name="location-outline" size={14} color="#6b7280" />
-                      <Text className="text-gray-500 ml-1 text-sm">{item.location_tour || "Unknown"}</Text>
-                    </View>
-                  </View>
-                  <Text className="text-amber-600 font-bold text-xl">${item.price_tour ?? "N/A"}</Text>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => removeFavorite(item.id)}
-                  style={{
-                    marginTop: 15,
-                    borderWidth: 1,
-                    borderColor: "#fee2e2",
-                    backgroundColor: "#fef2f2",
-                    paddingVertical: 10,
-                    borderRadius: 12,
-                    alignItems: "center",
-                    flexDirection: "row",
-                    justifyContent: "center"
-                  }}
-                >
-                  <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                  <Text className="text-red-500 font-semibold ml-2">Remove from favorites</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
+          showsVerticalScrollIndicator={Platform.OS === 'web'}
+          renderItem={renderItem}
         />
       )}
     </SafeAreaView>
