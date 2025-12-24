@@ -14,7 +14,7 @@ import "../../global.css";
 import { useAuth } from "../../src/contexts/AuthContex";
 
 // Định nghĩa literal paths hợp lệ cho TS
-type MenuPath = "/home" | "/userlist";
+type MenuPath = "/home" | "/userlist" | "/latesttour";
 
 type MenuItem = {
   path?: MenuPath;
@@ -51,6 +51,7 @@ export default function AdminLayout() {
   const menuItems: MenuItem[] = [
     { path: "/home", label: "Home", icon: "home-outline" },
     { path: "/userlist", label: "Manage User", icon: "person-outline" },
+    { path: "/latesttour", label: "Manage Tours", icon: "calendar-outline" },
     { label: "Logout", icon: "log-out-outline", action: handleLogout },
   ];
 
@@ -125,6 +126,15 @@ export default function AdminLayout() {
           ),
         }}
       />
+       <Tabs.Screen
+        name="latesttour"
+        options={{
+          title: "Manage Tours",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="userlist"
         options={{
@@ -134,6 +144,7 @@ export default function AdminLayout() {
           ),
         }}
       />
+     
       <Tabs.Screen
         name="_userdetail"
         options={{
@@ -143,6 +154,20 @@ export default function AdminLayout() {
       />
       <Tabs.Screen
         name="_addusermodal"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="_createtourmodal"
+        options={{
+          href: null,
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="_updatetourmodal"
         options={{
           href: null,
           headerShown: false,
